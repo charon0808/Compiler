@@ -34,12 +34,13 @@ syntax-c: $(YFILE)
 # 定义的一些伪目标
 .PHONY: clean test
 test:
-	$(FLEX) lexical.l
-	$(CC) -o test lex.yy.c
-	./test
+	lex lexical.l
+	yacc -d bison.y
+	gcc -g -w lex.yy.c bison.tab.c -ll 
 	#./parser ../Test/test1.cmm
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f $(LFC) $(YFC) $(YFC:.c=.h)
 	rm -f *~
+	rm -f *tab*

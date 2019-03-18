@@ -2,21 +2,42 @@
     #include <stdio.h>
     #include <stdlib.h>
 
+    #include "bison.h"
+
+	char** symbol_table_start=NULL;
+
     void bison_error(const char*);
+    node* node_con(char*);
+    //node* add_node(const char*);
+    extern int yylex(void);
+    void yyerror(char *);  
 %}
 
-%token INT FLOAT
-%token ID
-%token SEMI COMMA ASSIGNOP
-%token LT LE EQ NE GT GE
-%token PLUS MINUS
-%token STAR DIV
-%token DIV AND OR DOT NOT
-%token LP RP LB RB LC RC
-%token STRUCT RETURN
-%token IF ELSE WHILE
+%union{
+    union value val;
+    node* _node;
+    char name[32];
+}
+
+%token <name> INT FLOAT
+%token <name> ID
+%token <name> SEMI COMMA ASSIGNOP
+%token <name> LT LE EQ NE GT GE
+%token <name> PLUS MINUS
+%token <name> STAR
+%token <name> DIV AND OR DOT NOT
+%token <name> LP RP LB RB LC RC
+%token <name> STRUCT RETURN
+%token <name> IF ELSE WHILE
 %token TYPE
 %token RELOP
+
+%type <_node> Program ExtDefList ExtDef ExtDecList 
+%type <_node> Specifier StructSpecifier OptTag Tag
+%type <_node> VarDec FunDec VarList ParamDec
+%type <_node> CompSt StmtList Stmt
+%type <_node> DefList Def DecList Dec
+%type <_node> Exp Args
 
 %%
 
@@ -25,15 +46,15 @@ Program: ExtDefList {;}
 ExtDefList: ExtDef ExtDefList {;}
             | {;}
             ;
-ExtDef: Specifier ExtDefList SEMI {;}
+ExtDef: Specifier ExtDecList SEMI {;}
         | Specifier SEMI {;}
         | Specifier FunDec CompSt {;}
         ;
-ExtDefList: VarDec {;}
-            | VarDec COMMA ExtDefList {;}
+ExtDecList: VarDec {;}
+            | VarDec COMMA ExtDecList {;}
             ;
 
-ifier: TYPE StructSpecifier {;}
+Specifier: TYPE StructSpecifier {;}
         ;
 StructSpecifier: STRUCT OptTag LC DefList RC {;}
                 | STRUCT Tag {;}
@@ -97,11 +118,25 @@ Exp: Exp ASSIGNOP Exp {;}
     | Exp LB Exp RB {;}
     | Exp DOT ID {;}
     | ID {;}
-    | INT {;}
-    | FLOAT {;}
+    | INT {$$=node_con($1);}
+    | FLOAT {$$=node_con($1);}
     ;
 Args: Exp COMMA Args {;}
     | Exp {;}
     ;
 
 %%
+
+node* node_con(char* str)
+{
+    return NULL;
+}
+
+node* add_node(char* str)
+{
+    return NULL;
+}
+
+void yyerror (char *s) {
+   fprintf (stderr, "%s\n", s);
+ }
