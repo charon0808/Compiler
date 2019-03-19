@@ -11,6 +11,9 @@
 
     void bison_error(const char*);
     node* node_con(char*);
+    void add_child(node*,node*);
+    int add_in2_symbol_table(const char*);
+    int is_in_symbol_table(const char*);
     //node* add_node(const char*);
     int yylex(void);
     void yyerror(char *);  
@@ -32,8 +35,8 @@
 %token <name> LP RP LB RB LC RC
 %token <name> STRUCT RETURN
 %token <name> IF ELSE WHILE
-%token TYPE
-%token RELOP
+%token <name> TYPE
+%token <name> RELOP
 
 %type <_node> Program ExtDefList ExtDef ExtDecList 
 %type <_node> Specifier StructSpecifier OptTag Tag
@@ -43,21 +46,329 @@
 %type <_node> Exp Args
 
 %%
+Program: ExtDefList {
+        $$=node_con(NULL);
+        add_child($$,$1);
+    }
+        ;
+ExtDefList: ExtDef ExtDefList {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,$2);
+    }
+        | {
+            $$=node_con(NULL);
+            add_child($$,node_con("1o1"));
+        }
+        ;
+ExtDef: Specifier ExtDecList SEMI {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,$2);
+        add_child($$,node_con($3));
+    }
+        | Specifier SEMI {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+    }
+        | Specifier FunDec CompSt {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,$2);
+        add_child($$,$3);
+    }
+        ;
+ExtDecList: VarDec {
+            $$=node_con(NULL);
+            add_child($$,$1);
+        }
+        | VarDec COMMA ExtDecList {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+            add_child($$,$3);
+        }
+            ;
 
+Specifier: TYPE StructSpecifier {
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,$2);
+    }
+        ;
+StructSpecifier: STRUCT OptTag LC DefList RC {
+                    $$=node_con(NULL);
+                    add_child($$,node_con($1));
+                    add_child($$,$2);
+                    add_child($$,node_con($3));
+                    add_child($$,$4);
+                    add_child($$,node_con($5));
+                }
+                | STRUCT Tag {
+                    $$=node_con(NULL);
+                    add_child($$,node_con($1));
+                    add_child($$,$2);
+                }
+                ;
+OptTag: ID {
+        if (!add_in2_symbol_table($1)){
+            // TODO: if symbol already exists}
+        }
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+        }
+                    
+        | {
+            $$=node_con(NULL);
+            add_child($$,node_con("1o1"));
+        }
+        ;
+Tag: ID {
+        if (!add_in2_symbol_table($1)){
+            // TODO: if symbol already exists}
+        }
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+        }
+    ;
 
-Exp: Exp ASSIGNOP Exp {printf("exp=exp\n");}
-    | Exp AND Exp {printf("exp && exp\n");}
-    | Exp OR Exp {printf("exp || exp\n");}
-    | Exp RELOP {printf("exp RELOP exp\n");}
-    | Exp PLUS Exp {printf("exp + exp\n");}
-    | Exp MINUS Exp {printf("exp - exp\n");}
-    | Exp STAR Exp {printf("exp * exp\n");}
-    | Exp DIV Exp {printf("exp / exp\n");}
-    | LP Exp RP {printf("190\n");}
-    | MINUS Exp {printf("121\n");}
-    | NOT Exp {printf("132\n");}
-    | ID LP Args RP {printf("134\n");}
-    | ID LP RP {printf("145\n");}
+VarDec: ID {
+        if (!add_in2_symbol_table($1)){
+            // TODO: if symbol already exists}
+        }
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+        }
+        | VarDec LB INT RB {
+            $$=node_con(NULL);
+            add_child($$,($1));
+            add_child($$,node_con($2));
+            add_child($$,node_con($3));
+            add_child($$,node_con($4));
+        }
+        ;
+FunDec: ID LP VarList RP {
+        if (!add_in2_symbol_table($1)){
+            // TODO: if symbol already exists}
+        }
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,node_con($2));
+            add_child($$,$3);
+            add_child($$,node_con($4));
+        }
+        | ID LP RP {
+        if (!add_in2_symbol_table($1)){
+            // TODO: if symbol already exists}
+        }
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,node_con($2));
+            add_child($$,node_con($3));
+        }
+        ;
+VarList: ParamDec COMMA VarList {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+            add_child($$,$3);
+        }
+        | ParamDec {
+            $$=node_con(NULL);
+            add_child($$,$1);
+        }
+        ;
+ParamDec: Specifier VarDec {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,$2);
+        }
+        ;
+
+CompSt: LC DefList StmtList RC {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,$2);
+            add_child($$,$3);
+            add_child($$,node_con($4));
+        }
+        ;
+StmtList: Stmt StmtList {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,$2);
+            }
+        | {
+            $$=node_con(NULL);
+            add_child($$,node_con("1o1"));
+        }
+        ;
+Stmt: Exp SEMI {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+        }
+        | CompSt {
+            $$=node_con(NULL);
+            add_child($$,$1);
+        }
+        | RETURN Exp SEMI {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,$2);
+            add_child($$,node_con($3));
+        }
+        | IF LP Exp RP Stmt {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,node_con($2));
+            add_child($$,$3);
+            add_child($$,node_con($4));
+            add_child($$,$5);
+        }
+        | IF LP Exp RP Stmt ELSE Stmt {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,node_con($2));
+            add_child($$,$3);
+            add_child($$,node_con($4));
+            add_child($$,$5);
+            add_child($$,node_con($6));
+            add_child($$,$7);
+        }
+        | WHILE LP Exp RP Stmt {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+            add_child($$,node_con($2));
+            add_child($$,$3);
+            add_child($$,node_con($4));
+            add_child($$,$5);
+        }
+        ;
+
+DefList: Def DefList {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,$2);
+        }
+        | {
+            $$=node_con(NULL);
+            add_child($$,node_con("1o1"));
+        }
+        ;
+Def: Specifier DecList SEMI {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,$2);
+            add_child($$,node_con($3));
+        }
+    ;
+DecList: Dec  {
+            $$=node_con(NULL);
+            add_child($$,$1);
+        }
+        | Dec COMMA DecList {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+            add_child($$,$3);
+        }
+        ;
+Dec: VarDec {
+            $$=node_con(NULL);
+            add_child($$,$1);
+        }
+    | VarDec ASSIGNOP Exp {
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+            add_child($$,$3);
+        }
+    ;
+
+Exp: Exp ASSIGNOP Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp AND Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp OR Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp RELOP {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+    }
+    | Exp PLUS Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp MINUS Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp STAR Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp DIV Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | LP Exp RP {
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,$2);
+        add_child($$,node_con($3));
+    }
+    | MINUS Exp {
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,$2);
+    }
+    | NOT Exp {
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,$2);
+    }
+    | ID LP Args RP {
+        if (is_in_symbol_table($1)){
+            // TODO:
+        }
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,node_con($2));
+        add_child($$,$3);
+        add_child($$,node_con($4));
+    }
+    | ID LP RP {
+        if (is_in_symbol_table($1)){
+            // TODO:
+        }
+        $$=node_con(NULL);
+        add_child($$,node_con($1));
+        add_child($$,node_con($2));
+        add_child($$,node_con($3));
+    }
     | Exp LB Exp RB {
         $$=node_con(NULL);
         add_child($$,$1);
@@ -66,33 +377,45 @@ Exp: Exp ASSIGNOP Exp {printf("exp=exp\n");}
         add_child($$,node_con($4));
     }
     | Exp DOT ID {
-        if (!add_in2_symbol_table($3){
-            // TODO: if symbol already exists}
+        if (is_in_symbol_table($3)){
+            // TODO:
         }
-        else{
             $$=node_con(NULL);
             add_child($$,$1);
             add_child($$,node_con($2));
             add_child($$,node_con($3));
-        }
     }
     | ID {
-        if (!add_in2_symbol_table($1){
-            // TODO: if symbol already exists}
+        if (is_in_symbol_table($1)){
+            // TODO:
         }
-        else
-            $$=node_con($1);
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
     } 
-    | INT {$$=node_con($1);}
-    | FLOAT {$$=node_con($1);}
+    | INT {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+        }
+    | FLOAT {
+            $$=node_con(NULL);
+            add_child($$,node_con($1));
+        }
     ;
-Args: Exp COMMA Args {printf("187\n");}
-    | Exp {printf("198\n");}
+Args: Exp COMMA Args {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+    }
+    | Exp {
+        $$=node_con(NULL);
+        add_child($$,$1);
+    }
     ;
 
 %%
 
-node* node_con(const char* str)
+node* node_con(char* str)
 {
     node* new_node=(node *)malloc(sizeof(node));
     new_node->level=0;
@@ -115,7 +438,7 @@ void add_child(node* parent, node* child)
 int add_in2_symbol_table(const char* symbol_name)
 {
     symbol_list* start=_symbol_table_start;
-    while(start!=NUll){
+    while(start!=NULL){
         if(strcmp(start->symbol_name,symbol_name)==0)
             return 0;     // this ID already exists
         start=start->next;
@@ -124,6 +447,16 @@ int add_in2_symbol_table(const char* symbol_name)
     start->next=NULL;
     start->symbol_name=strdup(symbol_name);
     return 1;
+}
+
+int is_in_symbol_table(const char* symbol_name)
+{
+    symbol_list* start=_symbol_table_start;
+    while(start!=NULL){
+        if(strcmp(start->symbol_name,symbol_name)==0)
+            return 1; 
+    }
+    return 0;
 }
 
 node* add_node(char* str)

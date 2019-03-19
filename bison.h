@@ -1,4 +1,10 @@
 
+
+typedef struct child_list{
+    struct node* c;
+    struct child_list* next;
+}child_list;
+
 typedef struct node
 {
     int type;
@@ -7,10 +13,6 @@ typedef struct node
     char* code;
 }node;
 
-typedef struct child_list{
-    struct node* c;
-    struct child_list* next;
-}child_list;
 
 union value{
     int ival;

@@ -38,6 +38,10 @@ test: clean
 	bison -o syntax.tab.c -d bison.y
 	gcc -g -w lex.yy.c syntax.tab.c -ll 
 	#./parser ../Test/test1.cmm
+git: clean
+	git add .
+	git commit -m "update"
+	git push -u origin master
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
