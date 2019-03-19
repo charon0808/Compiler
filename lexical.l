@@ -3,8 +3,8 @@
     #include <stdlib.h>
     #include "bison.h"
     
-    #include "bison.tab.h"
-
+    #include "syntax.tab.h"
+/*
     #define LT 0
     #define LE 1
     #define EQ 2
@@ -37,7 +37,7 @@
     #define RC 29
     #define STRUCT 30
     #define RETURN 31
-    #define WHILE 32 
+    #define WHILE 32 */
 
     int lines=0;
 %}
@@ -80,14 +80,15 @@ while            while
 
 %%
 
-"\n"        {lines++;}
+[ \t\n]     {return -1;}
 {if}        {strcpy(yylval.name,yytext); return IF;}
 {else}      {strcpy(yylval.name,yytext); return ELSE;}
 {int}       {strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
+{assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
 "<"         {strcpy(yylval.name,yytext); return LT;}
 "<="        {strcpy(yylval.name,yytext); return LE;}
-"="         {strcpy(yylval.name,yytext); return EQ;}
+"=="        {strcpy(yylval.name,yytext); return EQ;}
 "!="        {strcpy(yylval.name,yytext); return NE;}
 ">"         {strcpy(yylval.name,yytext); return GT;}
 ">="        {strcpy(yylval.name,yytext); return GE;}
@@ -99,7 +100,7 @@ while            while
 {div}       {strcpy(yylval.name,yytext); return DIV;}
 {and}       {strcpy(yylval.name,yytext); return AND;}
 {or}        {strcpy(yylval.name,yytext); return OR;}
-'.'         {strcpy(yylval.name,yytext); return DOT;}
+{dot}       {printf("DOT\n");strcpy(yylval.name,yytext); return DOT;}
 {not}       {strcpy(yylval.name,yytext); return NOT;}
 {lp}        {strcpy(yylval.name,yytext); return LP;}
 {rp}        {strcpy(yylval.name,yytext); return RP;}
@@ -123,6 +124,8 @@ int main(int argc,char* argv[])
         i=yylex();
     }
 }*/
+
+
 
 int yywrap()
 {

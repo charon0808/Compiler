@@ -1,15 +1,20 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+  #include <unistd.h>
+  #include <sys/stat.h>
+  #include <fcntl.h>
 
     #include "bison.h"
 
-	char** symbol_table_start=NULL;
+    #include "syntax.tab.h"
+
+    char** _symbol_table_start=NULL;
 
     void bison_error(const char*);
     node* node_con(char*);
     //node* add_node(const char*);
-    extern int yylex(void);
+    int yylex(void);
     void yyerror(char *);  
 %}
 
@@ -41,88 +46,28 @@
 
 %%
 
-Program: ExtDefList {;}
-        ;
-ExtDefList: ExtDef ExtDefList {;}
-            | {;}
-            ;
-ExtDef: Specifier ExtDecList SEMI {;}
-        | Specifier SEMI {;}
-        | Specifier FunDec CompSt {;}
-        ;
-ExtDecList: VarDec {;}
-            | VarDec COMMA ExtDecList {;}
-            ;
 
-Specifier: TYPE StructSpecifier {;}
-        ;
-StructSpecifier: STRUCT OptTag LC DefList RC {;}
-                | STRUCT Tag {;}
-                ;
-OptTag: ID {;}
-        | {;}
-        ;
-Tag: ID {;}
+Exp: Exp ASSIGNOP Exp {printf("exp=exp\n");}
+    | Exp AND Exp {printf("exp && exp\n");}
+    | Exp OR Exp {printf("exp || exp\n");}
+    | Exp RELOP {printf("exp RELOP exp\n");}
+    | Exp PLUS Exp {printf("exp + exp\n");}
+    | Exp MINUS Exp {printf("exp - exp\n");}
+    | Exp STAR Exp {printf("exp * exp\n");}
+    | Exp DIV Exp {printf("exp / exp\n");}
+    | LP Exp RP {printf("190\n");}
+    | MINUS Exp {printf("121\n");}
+    | NOT Exp {printf("132\n");}
+    | ID LP Args RP {printf("134\n");}
+    | ID LP RP {printf("145\n");}
+    | Exp LB Exp RB {printf("165\n");}
+    | Exp DOT ID {printf("176\n");}
+    | ID {printf("ID\n");;}
+    | INT {printf("INT:%d\n",atoi($1));$$=node_con($1);}
+    | FLOAT {printf("FLOAT:%f\n",atof($1));$$=node_con($1);}
     ;
-
-VarDec: ID {;}
-        | VarDec LB INT RB {;}
-        ;
-FunDec: ID LP VarList RP {;}
-        | ID LP RP {;}
-        ;
-VarList: ParamDec COMMA VarList {;}
-        | ParamDec {;}
-        ;
-ParamDec: Specifier VarDec {;}
-        ;
-
-CompSt: LC DefList StmtList RC {;}
-        ;
-StmtList: Stmt StmtList {;}
-        | {;}
-        ;
-Stmt: Exp SEMI {;}
-        | CompSt {;}
-        | RETURN Exp SEMI {;}
-        | IF LP Exp RP Stmt {;}
-        | IF LP Exp RP Stmt ELSE Stmt {;}
-        | WHILE LP Exp RP Stmt {;}
-        ;
-
-DefList: Def DefList {;}
-        | {;}
-        ;
-Def: Specifier DecList SEMI {;}
-    ;
-DecList: Dec {;}
-        | Dec COMMA DecList {;}
-        ;
-Dec: VarDec {;}
-    | VarDec ASSIGNOP Exp {;}
-    ;
-
-Exp: Exp ASSIGNOP Exp {;}
-    | Exp AND Exp {;}
-    | Exp OR Exp {;}
-    | Exp RELOP {;}
-    | Exp PLUS Exp {;}
-    | Exp MINUS Exp {;}
-    | Exp STAR Exp {;}
-    | Exp DIV Exp {;}
-    | LP Exp RP {;}
-    | MINUS Exp {;}
-    | NOT Exp {;}
-    | ID LP Args RP {;}
-    | ID LP RP {;}
-    | Exp LB Exp RB {;}
-    | Exp DOT ID {;}
-    | ID {;}
-    | INT {$$=node_con($1);}
-    | FLOAT {$$=node_con($1);}
-    ;
-Args: Exp COMMA Args {;}
-    | Exp {;}
+Args: Exp COMMA Args {printf("187\n");}
+    | Exp {printf("198\n");}
     ;
 
 %%
@@ -140,3 +85,14 @@ node* add_node(char* str)
 void yyerror (char *s) {
    fprintf (stderr, "%s\n", s);
  }
+
+int main(int argc, char* argv[]) {
+    /*int fd;
+    if (argc>1&& (fd=open("sample.test",O_RDONLY))){
+        perror(argv[1]);
+        return 1;
+    }
+    dup2(fd,0);*/
+	yyparse();
+	return 0;
+}

@@ -18,7 +18,7 @@ LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
 
 parser: syntax $(filter-out $(LFO),$(OBJS))
-	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
+	$(CC) $(LFC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly -ll
 
 syntax: lexical syntax-c
 	$(CC) -c $(YFC) -o $(YFO)
@@ -33,10 +33,10 @@ syntax-c: $(YFILE)
 
 # 定义的一些伪目标
 .PHONY: clean test
-test:
-	lex lexical.l
-	yacc -d bison.y
-	gcc -g -w lex.yy.c bison.tab.c -ll 
+test: clean
+	flex -o lex.yy.c lexical.l
+	bison -o syntax.tab.c -d bison.y
+	gcc -g -w lex.yy.c syntax.tab.c -ll 
 	#./parser ../Test/test1.cmm
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
