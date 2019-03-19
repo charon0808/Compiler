@@ -1,15 +1,13 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-  #include <unistd.h>
-  #include <sys/stat.h>
-  #include <fcntl.h>
+    #include <string.h>
 
     #include "bison.h"
 
     #include "syntax.tab.h"
 
-    char** _symbol_table_start=NULL;
+    symbol_list* _symbol_table_start=NULL;
 
     void bison_error(const char*);
     node* node_con(char*);
@@ -60,11 +58,33 @@ Exp: Exp ASSIGNOP Exp {printf("exp=exp\n");}
     | NOT Exp {printf("132\n");}
     | ID LP Args RP {printf("134\n");}
     | ID LP RP {printf("145\n");}
-    | Exp LB Exp RB {printf("165\n");}
-    | Exp DOT ID {printf("176\n");}
-    | ID {printf("ID\n");;}
-    | INT {printf("INT:%d\n",atoi($1));$$=node_con($1);}
-    | FLOAT {printf("FLOAT:%f\n",atof($1));$$=node_con($1);}
+    | Exp LB Exp RB {
+        $$=node_con(NULL);
+        add_child($$,$1);
+        add_child($$,node_con($2));
+        add_child($$,$3);
+        add_child($$,node_con($4));
+    }
+    | Exp DOT ID {
+        if (!add_in2_symbol_table($3){
+            // TODO: if symbol already exists}
+        }
+        else{
+            $$=node_con(NULL);
+            add_child($$,$1);
+            add_child($$,node_con($2));
+            add_child($$,node_con($3));
+        }
+    }
+    | ID {
+        if (!add_in2_symbol_table($1){
+            // TODO: if symbol already exists}
+        }
+        else
+            $$=node_con($1);
+    } 
+    | INT {$$=node_con($1);}
+    | FLOAT {$$=node_con($1);}
     ;
 Args: Exp COMMA Args {printf("187\n");}
     | Exp {printf("198\n");}
@@ -72,9 +92,38 @@ Args: Exp COMMA Args {printf("187\n");}
 
 %%
 
-node* node_con(char* str)
+node* node_con(const char* str)
 {
-    return NULL;
+    node* new_node=(node *)malloc(sizeof(node));
+    new_node->level=0;
+    new_node->children=NULL;
+    if (str!=NULL)
+        new_node->code=strdup(str);
+    return new_node;
+}
+
+void add_child(node* parent, node* child)
+{
+    child_list* start=parent->children;
+    while(start!=NULL){
+        start=start->next;
+    }
+    start->c=child;
+    start->next=NULL;
+}
+
+int add_in2_symbol_table(const char* symbol_name)
+{
+    symbol_list* start=_symbol_table_start;
+    while(start!=NUll){
+        if(strcmp(start->symbol_name,symbol_name)==0)
+            return 0;     // this ID already exists
+        start=start->next;
+    }
+    start=(symbol_list*)malloc(sizeof(symbol_list));
+    start->next=NULL;
+    start->symbol_name=strdup(symbol_name);
+    return 1;
 }
 
 node* add_node(char* str)

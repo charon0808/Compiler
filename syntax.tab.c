@@ -66,9 +66,7 @@
 
     #include <stdio.h>
     #include <stdlib.h>
-  #include <unistd.h>
-  #include <sys/stat.h>
-  #include <fcntl.h>
+    #include <string.h>
 
     #include "bison.h"
 
@@ -82,7 +80,7 @@
     int yylex(void);
     void yyerror(char *);  
 
-#line 86 "./syntax.tab.c" /* yacc.c:339  */
+#line 84 "./syntax.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -158,13 +156,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 21 "./bison.y" /* yacc.c:355  */
+#line 19 "./bison.y" /* yacc.c:355  */
 
     union value val;
     node* _node;
     char name[32];
 
-#line 168 "./syntax.tab.c" /* yacc.c:355  */
+#line 166 "./syntax.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -181,7 +179,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 185 "./syntax.tab.c" /* yacc.c:358  */
+#line 183 "./syntax.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -482,9 +480,9 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    50,    50,    51,    52,    53,    54,    55,    56,    57,
-      58,    59,    60,    61,    62,    63,    64,    65,    66,    67,
-      69,    70
+       0,    48,    48,    49,    50,    51,    52,    53,    54,    55,
+      56,    57,    58,    59,    60,    61,    62,    63,    64,    65,
+      67,    68
 };
 #endif
 
@@ -1293,127 +1291,127 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 50 "./bison.y" /* yacc.c:1646  */
+#line 48 "./bison.y" /* yacc.c:1646  */
     {printf("exp=exp\n");}
-#line 1299 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1297 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 51 "./bison.y" /* yacc.c:1646  */
+#line 49 "./bison.y" /* yacc.c:1646  */
     {printf("exp && exp\n");}
-#line 1305 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1303 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 52 "./bison.y" /* yacc.c:1646  */
+#line 50 "./bison.y" /* yacc.c:1646  */
     {printf("exp || exp\n");}
-#line 1311 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1309 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 53 "./bison.y" /* yacc.c:1646  */
+#line 51 "./bison.y" /* yacc.c:1646  */
     {printf("exp RELOP exp\n");}
-#line 1317 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1315 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 54 "./bison.y" /* yacc.c:1646  */
+#line 52 "./bison.y" /* yacc.c:1646  */
     {printf("exp + exp\n");}
-#line 1323 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1321 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 55 "./bison.y" /* yacc.c:1646  */
+#line 53 "./bison.y" /* yacc.c:1646  */
     {printf("exp - exp\n");}
-#line 1329 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1327 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 56 "./bison.y" /* yacc.c:1646  */
+#line 54 "./bison.y" /* yacc.c:1646  */
     {printf("exp * exp\n");}
-#line 1335 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1333 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 57 "./bison.y" /* yacc.c:1646  */
+#line 55 "./bison.y" /* yacc.c:1646  */
     {printf("exp / exp\n");}
-#line 1341 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 58 "./bison.y" /* yacc.c:1646  */
+#line 56 "./bison.y" /* yacc.c:1646  */
     {printf("190\n");}
-#line 1347 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 59 "./bison.y" /* yacc.c:1646  */
+#line 57 "./bison.y" /* yacc.c:1646  */
     {printf("121\n");}
-#line 1353 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1351 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 60 "./bison.y" /* yacc.c:1646  */
+#line 58 "./bison.y" /* yacc.c:1646  */
     {printf("132\n");}
-#line 1359 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1357 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 61 "./bison.y" /* yacc.c:1646  */
+#line 59 "./bison.y" /* yacc.c:1646  */
     {printf("134\n");}
-#line 1365 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1363 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 62 "./bison.y" /* yacc.c:1646  */
+#line 60 "./bison.y" /* yacc.c:1646  */
     {printf("145\n");}
-#line 1371 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1369 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 63 "./bison.y" /* yacc.c:1646  */
+#line 61 "./bison.y" /* yacc.c:1646  */
     {printf("165\n");}
-#line 1377 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1375 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 64 "./bison.y" /* yacc.c:1646  */
-    {printf("176\n");}
-#line 1383 "./syntax.tab.c" /* yacc.c:1646  */
+#line 62 "./bison.y" /* yacc.c:1646  */
+    {printf("%s, %s, %s\n",(yyvsp[-2]._node)->code,(yyvsp[-1].name),(yyvsp[0].name));}
+#line 1381 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 65 "./bison.y" /* yacc.c:1646  */
-    {printf("ID\n");;}
-#line 1389 "./syntax.tab.c" /* yacc.c:1646  */
+#line 63 "./bison.y" /* yacc.c:1646  */
+    {(yyval._node)=node_con((yyvsp[0].name));}
+#line 1387 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 66 "./bison.y" /* yacc.c:1646  */
-    {printf("INT:%d\n",atoi((yyvsp[0].name)));(yyval._node)=node_con((yyvsp[0].name));}
-#line 1395 "./syntax.tab.c" /* yacc.c:1646  */
+#line 64 "./bison.y" /* yacc.c:1646  */
+    {(yyval._node)=node_con((yyvsp[0].name));}
+#line 1393 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 67 "./bison.y" /* yacc.c:1646  */
-    {printf("FLOAT:%f\n",atof((yyvsp[0].name)));(yyval._node)=node_con((yyvsp[0].name));}
-#line 1401 "./syntax.tab.c" /* yacc.c:1646  */
+#line 65 "./bison.y" /* yacc.c:1646  */
+    {(yyval._node)=node_con((yyvsp[0].name));}
+#line 1399 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 69 "./bison.y" /* yacc.c:1646  */
+#line 67 "./bison.y" /* yacc.c:1646  */
     {printf("187\n");}
-#line 1407 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1405 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 70 "./bison.y" /* yacc.c:1646  */
+#line 68 "./bison.y" /* yacc.c:1646  */
     {printf("198\n");}
-#line 1413 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1411 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1417 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1415 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1641,12 +1639,16 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 73 "./bison.y" /* yacc.c:1906  */
+#line 71 "./bison.y" /* yacc.c:1906  */
 
 
 node* node_con(char* str)
 {
-    return NULL;
+    node* new_node=(node *)malloc(sizeof(node));
+    new_node->level=0;
+    new_node->child_list=NULL;
+    new_node->code=strdup(str);
+    return new_node;
 }
 
 node* add_node(char* str)

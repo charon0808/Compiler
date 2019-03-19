@@ -86,7 +86,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 21 "./bison.y" /* yacc.c:1909  */
+#line 19 "./bison.y" /* yacc.c:1909  */
 
     union value val;
     node* _node;
