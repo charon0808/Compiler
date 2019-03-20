@@ -50,7 +50,8 @@
 
 %%
 Program: ExtDefList {
-        $$=node_con(NULL);
+    printf("123\n");
+        $$=node_con("Program");
         add_child($$,$1);
         program_node=$$;
         print_tree($$,0);
@@ -58,39 +59,39 @@ Program: ExtDefList {
     }
         ;
 ExtDefList: ExtDef ExtDefList {
-        $$=node_con(NULL);
+        $$=node_con("ExtDefList");
         add_child($$,$1);
         add_child($$,$2);
     }
         | {
-            $$=node_con(NULL);
+            $$=node_con("ExtDefList");
             add_child($$,node_con(empty));
         }
         ;
 ExtDef: Specifier ExtDecList SEMI {
-        $$=node_con(NULL);
+        $$=node_con("ExtDef");
         add_child($$,$1);
         add_child($$,$2);
         add_child($$,node_con($3));
     }
         | Specifier SEMI {
-        $$=node_con(NULL);
+        $$=node_con("ExtDef");
         add_child($$,$1);
         add_child($$,node_con($2));
     }
         | Specifier FunDec CompSt {
-        $$=node_con(NULL);
+        $$=node_con("ExtDef");
         add_child($$,$1);
         add_child($$,$2);
         add_child($$,$3);
     }
         ;
 ExtDecList: VarDec {
-            $$=node_con(NULL);
+            $$=node_con("ExtDecList");
             add_child($$,$1);
         }
         | VarDec COMMA ExtDecList {
-            $$=node_con(NULL);
+            $$=node_con("ExtDecList");
             add_child($$,$1);
             add_child($$,node_con($2));
             add_child($$,$3);
@@ -98,16 +99,16 @@ ExtDecList: VarDec {
             ;
 
 Specifier: TYPE {
-        $$=node_con(NULL);
+        $$=node_con("Specifier");
         add_child($$,node_con($1));
         }
         | StructSpecifier {
-        $$=node_con(NULL);
+        $$=node_con("Specifier");
         add_child($$,$1);
     }
         ;
 StructSpecifier: STRUCT OptTag LC DefList RC {
-                    $$=node_con(NULL);
+                    $$=node_con("StructSpecifier");
                     add_child($$,node_con($1));
                     add_child($$,$2);
                     add_child($$,node_con($3));
@@ -115,7 +116,7 @@ StructSpecifier: STRUCT OptTag LC DefList RC {
                     add_child($$,node_con($5));
                 }
                 | STRUCT Tag {
-                    $$=node_con(NULL);
+                    $$=node_con("StructSpecifier");
                     add_child($$,node_con($1));
                     add_child($$,$2);
                 }
@@ -124,12 +125,12 @@ OptTag: ID {
         if (!add_in2_symbol_table($1)){
             // TODO: if symbol already exists}
         }
-            $$=node_con(NULL);
+            $$=node_con("OptTag");
             add_child($$,node_con($1));
         }
                     
         | {
-            $$=node_con(NULL);
+            $$=node_con("OptTag");
             add_child($$,node_con(empty));
         }
         ;
@@ -137,7 +138,7 @@ Tag: ID {
         if (!add_in2_symbol_table($1)){
             // TODO: if symbol already exists}
         }
-            $$=node_con(NULL);
+            $$=node_con("Tag");
             add_child($$,node_con($1));
         }
     ;
@@ -146,11 +147,11 @@ VarDec: ID {
         if (!add_in2_symbol_table($1)){
             // TODO: if symbol already exists}
         }
-            $$=node_con(NULL);
+            $$=node_con("VarDec");
             add_child($$,node_con($1));
         }
         | VarDec LB INT RB {
-            $$=node_con(NULL);
+            $$=node_con("VarDec");
             add_child($$,($1));
             add_child($$,node_con($2));
             add_child($$,node_con($3));
@@ -161,7 +162,7 @@ FunDec: ID LP VarList RP {
             if (!add_in2_symbol_table($1)){
                 // TODO: if symbol already exists}
             }
-            $$=node_con(NULL);
+            $$=node_con("FunDec");
             add_child($$,node_con($1));
             add_child($$,node_con($2));
             add_child($$,$3);
@@ -171,14 +172,14 @@ FunDec: ID LP VarList RP {
             if (!add_in2_symbol_table($1)){
                 // TODO: if symbol already exists}
             }
-            $$=node_con(NULL);
+            $$=node_con("FunDec");
             add_child($$,node_con($1));
             add_child($$,node_con($2));
             add_child($$,node_con($3));
         }
         ;
 VarList: ParamDec COMMA VarList {
-            $$=node_con(NULL);
+            $$=node_con("VarList");
             add_child($$,$1);
             add_child($$,node_con($2));
             add_child($$,$3);
@@ -189,14 +190,14 @@ VarList: ParamDec COMMA VarList {
         }
         ;
 ParamDec: Specifier VarDec {
-            $$=node_con(NULL);
+            $$=node_con("ParamDec");
             add_child($$,$1);
             add_child($$,$2);
         }
         ;
 
 CompSt: LC DefList StmtList RC {
-            $$=node_con(NULL);
+            $$=node_con("CompSt");
             add_child($$,node_con($1));
             add_child($$,$2);
             add_child($$,$3);
@@ -448,6 +449,21 @@ void add_child(node* parent, node* child)
     start=(child_list*)malloc(sizeof(child_list));
     start->c=child;
     start->next=NULL;
+    printf("child:[%s] added into parent:[%s]\n",child->code,parent->code);
+}
+
+void print_tree(node* root, int level)
+{
+    if (root->children==NULL){
+        printf("%*s",level*4,root->code);
+    }
+    else {
+        printf("321\n");
+        child_list* start=root->children;
+        while (start!=NULL){
+            print_tree(start->c,level+1);
+        }
+    }
 }
 
 int add_in2_symbol_table(const char* symbol_name)
@@ -474,18 +490,6 @@ int is_in_symbol_table(const char* symbol_name)
     return 0;
 }
 
-void print_tree(node* root, int level)
-{
-    if (root->children==NULL){
-        printf("%*s",level*4,root->code);
-    }
-    else {
-        child_list* start=root->children;
-        while (start!=NULL){
-            print_tree(start->c,level+1);
-        }
-    }
-}
 
 void yyerror (char *s) {
    fprintf (stderr, "%s\n", s);
