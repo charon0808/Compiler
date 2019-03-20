@@ -34,10 +34,8 @@ syntax-c: $(YFILE)
 # 定义的一些伪目标
 .PHONY: clean test
 test: clean
-	flex -o lex.yy.c lexical.l
-	bison -o syntax.tab.c -d bison.y
-	gcc -g -w lex.yy.c syntax.tab.c -ll 
-	#./parser ../Test/test1.cmm
+	make
+	./parser ../Test/test1.cmm
 git: clean
 	git add .
 	git commit -m "update"

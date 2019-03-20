@@ -14,7 +14,9 @@
     void add_child(node*,node*);
     int add_in2_symbol_table(const char*);
     int is_in_symbol_table(const char*);
-    //node* add_node(const char*);
+    void print_tree(node*, int);
+    char* empty="1o1";
+    node* program_node;
     int yylex(void);
     void yyerror(char *);  
 %}
@@ -25,6 +27,7 @@
     char name[32];
 }
 
+%token WS
 %token <name> INT FLOAT
 %token <name> ID
 %token <name> SEMI COMMA ASSIGNOP
@@ -49,6 +52,9 @@
 Program: ExtDefList {
         $$=node_con(NULL);
         add_child($$,$1);
+        program_node=$$;
+        print_tree($$,0);
+        //return 0;
     }
         ;
 ExtDefList: ExtDef ExtDefList {
@@ -58,7 +64,7 @@ ExtDefList: ExtDef ExtDefList {
     }
         | {
             $$=node_con(NULL);
-            add_child($$,node_con("1o1"));
+            add_child($$,node_con(empty));
         }
         ;
 ExtDef: Specifier ExtDecList SEMI {
@@ -91,10 +97,13 @@ ExtDecList: VarDec {
         }
             ;
 
-Specifier: TYPE StructSpecifier {
+Specifier: TYPE {
         $$=node_con(NULL);
         add_child($$,node_con($1));
-        add_child($$,$2);
+        }
+        | StructSpecifier {
+        $$=node_con(NULL);
+        add_child($$,$1);
     }
         ;
 StructSpecifier: STRUCT OptTag LC DefList RC {
@@ -121,7 +130,7 @@ OptTag: ID {
                     
         | {
             $$=node_con(NULL);
-            add_child($$,node_con("1o1"));
+            add_child($$,node_con(empty));
         }
         ;
 Tag: ID {
@@ -149,9 +158,9 @@ VarDec: ID {
         }
         ;
 FunDec: ID LP VarList RP {
-        if (!add_in2_symbol_table($1)){
-            // TODO: if symbol already exists}
-        }
+            if (!add_in2_symbol_table($1)){
+                // TODO: if symbol already exists}
+            }
             $$=node_con(NULL);
             add_child($$,node_con($1));
             add_child($$,node_con($2));
@@ -159,9 +168,9 @@ FunDec: ID LP VarList RP {
             add_child($$,node_con($4));
         }
         | ID LP RP {
-        if (!add_in2_symbol_table($1)){
-            // TODO: if symbol already exists}
-        }
+            if (!add_in2_symbol_table($1)){
+                // TODO: if symbol already exists}
+            }
             $$=node_con(NULL);
             add_child($$,node_con($1));
             add_child($$,node_con($2));
@@ -201,7 +210,7 @@ StmtList: Stmt StmtList {
             }
         | {
             $$=node_con(NULL);
-            add_child($$,node_con("1o1"));
+            add_child($$,node_con(empty));
         }
         ;
 Stmt: Exp SEMI {
@@ -254,7 +263,7 @@ DefList: Def DefList {
         }
         | {
             $$=node_con(NULL);
-            add_child($$,node_con("1o1"));
+            add_child($$,node_con(empty));
         }
         ;
 Def: Specifier DecList SEMI {
@@ -280,6 +289,7 @@ Dec: VarDec {
             add_child($$,$1);
         }
     | VarDec ASSIGNOP Exp {
+        printf("IN Dec\n");
             $$=node_con(NULL);
             add_child($$,$1);
             add_child($$,node_con($2));
@@ -415,13 +425,17 @@ Args: Exp COMMA Args {
 
 %%
 
+//void print_tree()
+
 node* node_con(char* str)
 {
     node* new_node=(node *)malloc(sizeof(node));
     new_node->level=0;
     new_node->children=NULL;
-    if (str!=NULL)
+    if (str!=NULL){
+        printf("%s\n",str);
         new_node->code=strdup(str);
+    }
     return new_node;
 }
 
@@ -431,6 +445,7 @@ void add_child(node* parent, node* child)
     while(start!=NULL){
         start=start->next;
     }
+    start=(child_list*)malloc(sizeof(child_list));
     start->c=child;
     start->next=NULL;
 }
@@ -459,9 +474,17 @@ int is_in_symbol_table(const char* symbol_name)
     return 0;
 }
 
-node* add_node(char* str)
+void print_tree(node* root, int level)
 {
-    return NULL;
+    if (root->children==NULL){
+        printf("%*s",level*4,root->code);
+    }
+    else {
+        child_list* start=root->children;
+        while (start!=NULL){
+            print_tree(start->c,level+1);
+        }
+    }
 }
 
 void yyerror (char *s) {
@@ -476,5 +499,6 @@ int main(int argc, char* argv[]) {
     }
     dup2(fd,0);*/
 	yyparse();
+   // printf("%s\n",program_node->code);
 	return 0;
 }

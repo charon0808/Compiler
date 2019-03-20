@@ -63,13 +63,14 @@ and              &&
 or               \|\|
 dot              \.
 not              !
-type             {int} | {float}
 lp               \(
 rp               \)
 lb               \[
 rb               \]
 lc               \{
 rc               \}
+typeint          int
+typefloat        float
 struct           struct
 return           return
 if               if
@@ -80,7 +81,7 @@ while            while
 
 %%
 
-[ \t\n]     {return -1;}
+{ws}        {;}
 {if}        {strcpy(yylval.name,yytext); return IF;}
 {else}      {strcpy(yylval.name,yytext); return ELSE;}
 {int}       {strcpy(yylval.name,yytext); return INT;}
@@ -111,6 +112,7 @@ while            while
 {struct}    {strcpy(yylval.name,yytext); return STRUCT;}
 {return}    {strcpy(yylval.name,yytext); return RETURN;}
 {while}     {strcpy(yylval.name,yytext); return WHILE;}
+{typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
 {id}        {strcpy(yylval.name,yytext); return ID;}
 .           {strcpy(yylval.name,yytext); printf("error\n"); return -1;}
 
