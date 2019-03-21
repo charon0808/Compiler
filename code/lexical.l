@@ -123,7 +123,7 @@ while            while
 {while}     {strcpy(yylval.name,yytext); return WHILE;}
 {typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
 {id}        {strcpy(yylval.name,yytext); return ID;}
-.           {printf("Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); exit(1);}
+.           {fprintf(stderr, "Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); exit(1);}
 
 %%
 /*

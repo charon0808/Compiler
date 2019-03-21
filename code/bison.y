@@ -22,6 +22,7 @@
     extern char* yytext;
     int yylex(void);
     void yyerror(char *);  
+    int error=1;
 %}
 
 %union{
@@ -56,7 +57,8 @@ Program: ExtDefList {
         $$=node_con("Program");
         add_child($$,$1);
         program_node=$$;
-        print_tree($$,0);
+        if (error)
+            print_tree($$,0);
         //return 0;
     }
         ;
@@ -534,7 +536,9 @@ int is_in_symbol_table(const char* symbol_name)
 
 
 void yyerror (char *s) {
-   fprintf (stderr, "Error type B at line %d: %s before \"%s\"",yylineno, s,yytext);
+    error=0;
+   fprintf (stderr, "Error type B at line %d: %s before \'%s\'\n",yylineno, s,yytext);
+   yyparse();
 }
 
 int main(int argc, char* argv[]) {
