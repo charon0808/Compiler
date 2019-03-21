@@ -51,12 +51,12 @@
 %}
 
 /* regular definations */
-delim            [ \t\n]
+delim            [ \t\r\n]
 ws               {delim}+
 letter           [a-zA-Z]
 digit            [0-9]
-power            E[+-]?{digit}+
-int              [+-]?{digit}+{power}?
+power            E[+-]?({digit})+
+int              {digit}+{power}?
 float            {digit}+(\.{digit}+)?({power})?
 id               {letter}({letter}|{digit})*
 semi             ;
@@ -68,8 +68,8 @@ eq               ==
 ne               !=
 gt               >
 ge               >=
-relop            {lt}|{le}|{eq}|{ne}|{gt}|{ge}
 plus             \+
+relop            {lt}|{le}|{eq}|{ne}|{gt}|{ge}
 minus            -
 star             \*
 div              \/
@@ -101,16 +101,16 @@ while            while
 {int}       {strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
 {assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
+{plus}      {strcpy(yylval.name,yytext); return PLUS;}
 {relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {semi}      {strcpy(yylval.name,yytext); return SEMI;}
 {comma}     {strcpy(yylval.name,yytext); return COMMA;}
-{plus}      {strcpy(yylval.name,yytext); return PLUS;}
 {minus}     {strcpy(yylval.name,yytext); return MINUS;}
 {star}      {strcpy(yylval.name,yytext); return STAR;}
 {div}       {strcpy(yylval.name,yytext); return DIV;}
 {and}       {strcpy(yylval.name,yytext); return AND;}
 {or}        {strcpy(yylval.name,yytext); return OR;}
-{dot}       {printf("DOT\n");strcpy(yylval.name,yytext); return DOT;}
+{dot}       {strcpy(yylval.name,yytext); return DOT;}
 {not}       {strcpy(yylval.name,yytext); return NOT;}
 {lp}        {strcpy(yylval.name,yytext); return LP;}
 {rp}        {strcpy(yylval.name,yytext); return RP;}

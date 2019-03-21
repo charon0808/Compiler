@@ -37,7 +37,7 @@ test: clean
 	make
 	./parser ../Test/test1.cmm
 git: clean
-	git add .
+	git add ..
 	git commit -m "update"
 	git push -u origin master
 clean:

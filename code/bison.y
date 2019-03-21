@@ -51,7 +51,6 @@
 
 %%
 Program: ExtDefList {
-    ///printf("123\n");
         $$=node_con("Program");
         add_child($$,$1);
         program_node=$$;
@@ -76,11 +75,6 @@ ExtDef: Specifier ExtDecList SEMI {
         strcpy(cat,"SEMI:");
         add_child($$,node_con(strcat(cat,$3)));
         child_node* start=$$->children;
-       /* printf("ExtDef children:\n");
-        while(start!=NULL){
-            printf("[%s], ",start->c->code);
-            start=start->next;
-        }*/
     }
         | Specifier SEMI {
         $$=node_con("ExtDef");
@@ -133,23 +127,22 @@ StructSpecifier: STRUCT OptTag LC DefList RC {
                 }
                 ;
 OptTag: ID {
-        if (!add_in2_symbol_table($1)){
-            // TODO: if symbol already exists}
-        }
+            if (!add_in2_symbol_table($1)){
+                // TODO: if symbol already exists}
+            }
             $$=node_con("OptTag");
             strcpy(cat,"ID:");
             add_child($$,node_con(strcat(cat,$1)));
-        }
-                    
+        }              
         | {
             $$=node_con("OptTag");
             add_child($$,node_con(empty));
         }
         ;
 Tag: ID {
-        if (!add_in2_symbol_table($1)){
-            // TODO: if symbol already exists}
-        }
+            if (!add_in2_symbol_table($1)){
+                // TODO: if symbol already exists}
+            }
             $$=node_con("Tag");
             strcpy(cat,"ID:");
             add_child($$,node_con(strcat(cat,$1)));
@@ -312,10 +305,9 @@ Dec: VarDec {
             add_child($$,$1);
         }
     | VarDec ASSIGNOP Exp {
-        printf("IN Dec\n");
             $$=node_con("Dec");
             add_child($$,$1);
-            strcpy(cat,"ASSIGNOP");
+            strcpy(cat,"ASSIGNOP:");
             add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
@@ -324,7 +316,7 @@ Dec: VarDec {
 Exp: Exp ASSIGNOP Exp {
         $$=node_con("Exp");
         add_child($$,$1);
-        strcpy(cat,"ASSIGNOP");
+        strcpy(cat,"ASSIGNOP:");
         add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
@@ -543,14 +535,12 @@ void yyerror (char *s) {
  }
 
 int main(int argc, char* argv[]) {
-    /*int fd;
-    if (argc>1&& (fd=open("sample.test",O_RDONLY))){
-        perror(argv[1]);
-        return 1;
-    }
-    dup2(fd,0);*/
+    if (argc>1)
+        if (freopen(argv[1],"r",stdin)==NULL){
+            perror(argv[1]);
+            return 1;
+        }
     cat=(char*)malloc(sizeof(char)*64);
 	yyparse();
-   // printf("%s\n",program_node->code);
 	return 0;
 }
