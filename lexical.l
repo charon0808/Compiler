@@ -37,7 +37,15 @@
     #define RC 29
     #define STRUCT 30
     #define RETURN 31
-    #define WHILE 32 */
+    #define WHILE 32 
+    
+"<"         {strcpy(yylval.name,yytext); return LT;}
+"<="        {strcpy(yylval.name,yytext); return LE;}
+"=="        {strcpy(yylval.name,yytext); return EQ;}
+"!="        {strcpy(yylval.name,yytext); return NE;}
+">"         {strcpy(yylval.name,yytext); return GT;}
+">="        {strcpy(yylval.name,yytext); return GE;}
+    */
 
     int lines=0;
 %}
@@ -54,7 +62,13 @@ id               {letter}({letter}|{digit})*
 semi             ;
 comma            ,
 assignop         =
-relop            > | < | >= | <= | == | !=
+lt               <
+le               <=
+eq               ==
+ne               !=
+gt               >
+ge               >=
+relop            {lt}|{le}|{eq}|{ne}|{gt}|{ge}
 plus             \+
 minus            -
 star             \*
@@ -87,12 +101,7 @@ while            while
 {int}       {strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
 {assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
-"<"         {strcpy(yylval.name,yytext); return LT;}
-"<="        {strcpy(yylval.name,yytext); return LE;}
-"=="        {strcpy(yylval.name,yytext); return EQ;}
-"!="        {strcpy(yylval.name,yytext); return NE;}
-">"         {strcpy(yylval.name,yytext); return GT;}
-">="        {strcpy(yylval.name,yytext); return GE;}
+{relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {semi}      {strcpy(yylval.name,yytext); return SEMI;}
 {comma}     {strcpy(yylval.name,yytext); return COMMA;}
 {plus}      {strcpy(yylval.name,yytext); return PLUS;}

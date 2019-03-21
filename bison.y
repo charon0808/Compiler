@@ -15,7 +15,8 @@
     int add_in2_symbol_table(const char*);
     int is_in_symbol_table(const char*);
     void print_tree(node*, int);
-    char* empty="1o1";
+    char* empty="\"empty\"";
+    char* cat;
     node* program_node;
     int yylex(void);
     void yyerror(char *);  
@@ -50,7 +51,7 @@
 
 %%
 Program: ExtDefList {
-    printf("123\n");
+    ///printf("123\n");
         $$=node_con("Program");
         add_child($$,$1);
         program_node=$$;
@@ -72,12 +73,20 @@ ExtDef: Specifier ExtDecList SEMI {
         $$=node_con("ExtDef");
         add_child($$,$1);
         add_child($$,$2);
-        add_child($$,node_con($3));
+        strcpy(cat,"SEMI:");
+        add_child($$,node_con(strcat(cat,$3)));
+        child_node* start=$$->children;
+       /* printf("ExtDef children:\n");
+        while(start!=NULL){
+            printf("[%s], ",start->c->code);
+            start=start->next;
+        }*/
     }
         | Specifier SEMI {
         $$=node_con("ExtDef");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"SEMI:");
+        add_child($$,node_con(strcat(cat,$2)));
     }
         | Specifier FunDec CompSt {
         $$=node_con("ExtDef");
@@ -93,14 +102,16 @@ ExtDecList: VarDec {
         | VarDec COMMA ExtDecList {
             $$=node_con("ExtDecList");
             add_child($$,$1);
-            add_child($$,node_con($2));
+            strcpy(cat,"COMMA:");
+            add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
             ;
 
 Specifier: TYPE {
         $$=node_con("Specifier");
-        add_child($$,node_con($1));
+        strcpy(cat,"TYPE:");
+        add_child($$,node_con(strcat(cat,$1)));
         }
         | StructSpecifier {
         $$=node_con("Specifier");
@@ -111,9 +122,9 @@ StructSpecifier: STRUCT OptTag LC DefList RC {
                     $$=node_con("StructSpecifier");
                     add_child($$,node_con($1));
                     add_child($$,$2);
-                    add_child($$,node_con($3));
+                    add_child($$,node_con("LC:{"));
                     add_child($$,$4);
-                    add_child($$,node_con($5));
+                    add_child($$,node_con("RC:}"));
                 }
                 | STRUCT Tag {
                     $$=node_con("StructSpecifier");
@@ -126,7 +137,8 @@ OptTag: ID {
             // TODO: if symbol already exists}
         }
             $$=node_con("OptTag");
-            add_child($$,node_con($1));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
         }
                     
         | {
@@ -139,7 +151,8 @@ Tag: ID {
             // TODO: if symbol already exists}
         }
             $$=node_con("Tag");
-            add_child($$,node_con($1));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
         }
     ;
 
@@ -148,14 +161,16 @@ VarDec: ID {
             // TODO: if symbol already exists}
         }
             $$=node_con("VarDec");
-            add_child($$,node_con($1));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
         }
         | VarDec LB INT RB {
             $$=node_con("VarDec");
             add_child($$,($1));
-            add_child($$,node_con($2));
-            add_child($$,node_con($3));
-            add_child($$,node_con($4));
+            add_child($$,node_con("LB:["));
+            strcpy(cat,"INT:");
+            add_child($$,node_con(strcat(cat,$3)));
+            add_child($$,node_con("RB:]"));
         }
         ;
 FunDec: ID LP VarList RP {
@@ -163,25 +178,28 @@ FunDec: ID LP VarList RP {
                 // TODO: if symbol already exists}
             }
             $$=node_con("FunDec");
-            add_child($$,node_con($1));
-            add_child($$,node_con($2));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
+            add_child($$,node_con("LP:("));
             add_child($$,$3);
-            add_child($$,node_con($4));
+            add_child($$,node_con("RP:)"));
         }
         | ID LP RP {
             if (!add_in2_symbol_table($1)){
                 // TODO: if symbol already exists}
             }
             $$=node_con("FunDec");
-            add_child($$,node_con($1));
-            add_child($$,node_con($2));
-            add_child($$,node_con($3));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
+            add_child($$,node_con("LP:("));
+            add_child($$,node_con("RP:)"));
         }
         ;
 VarList: ParamDec COMMA VarList {
             $$=node_con("VarList");
             add_child($$,$1);
-            add_child($$,node_con($2));
+            strcpy(cat,"COMMA:");
+            add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
         | ParamDec {
@@ -198,228 +216,246 @@ ParamDec: Specifier VarDec {
 
 CompSt: LC DefList StmtList RC {
             $$=node_con("CompSt");
-            add_child($$,node_con($1));
+            add_child($$,node_con("LC:{"));
             add_child($$,$2);
             add_child($$,$3);
-            add_child($$,node_con($4));
+            add_child($$,node_con("RC:}"));
         }
         ;
 StmtList: Stmt StmtList {
-            $$=node_con(NULL);
+            $$=node_con("StmtList");
             add_child($$,$1);
             add_child($$,$2);
             }
         | {
-            $$=node_con(NULL);
+            $$=node_con("StmtList");
             add_child($$,node_con(empty));
         }
         ;
 Stmt: Exp SEMI {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,$1);
-            add_child($$,node_con($2));
+            strcpy(cat,"SEMI:");
+            add_child($$,node_con(strcat(cat,$2)));
         }
         | CompSt {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,$1);
         }
         | RETURN Exp SEMI {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,node_con($1));
             add_child($$,$2);
-            add_child($$,node_con($3));
+            strcpy(cat,"SEMI:");
+            add_child($$,node_con(strcat(cat,$3)));
         }
         | IF LP Exp RP Stmt {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,node_con($1));
-            add_child($$,node_con($2));
+            add_child($$,node_con("LP:("));
             add_child($$,$3);
-            add_child($$,node_con($4));
+            add_child($$,node_con("RP:)"));
             add_child($$,$5);
         }
         | IF LP Exp RP Stmt ELSE Stmt {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,node_con($1));
-            add_child($$,node_con($2));
+            add_child($$,node_con("LP:("));
             add_child($$,$3);
-            add_child($$,node_con($4));
+            add_child($$,node_con("RP:)"));
             add_child($$,$5);
             add_child($$,node_con($6));
             add_child($$,$7);
         }
         | WHILE LP Exp RP Stmt {
-            $$=node_con(NULL);
+            $$=node_con("Stmt");
             add_child($$,node_con($1));
-            add_child($$,node_con($2));
+            add_child($$,node_con("LP:("));
             add_child($$,$3);
-            add_child($$,node_con($4));
+            add_child($$,node_con("RP:)"));
             add_child($$,$5);
         }
         ;
 
 DefList: Def DefList {
-            $$=node_con(NULL);
+            $$=node_con("DefList");
             add_child($$,$1);
             add_child($$,$2);
         }
         | {
-            $$=node_con(NULL);
+            $$=node_con("DefList");
             add_child($$,node_con(empty));
         }
         ;
 Def: Specifier DecList SEMI {
-            $$=node_con(NULL);
+            $$=node_con("Def");
             add_child($$,$1);
             add_child($$,$2);
-            add_child($$,node_con($3));
+            strcpy(cat,"SEMI:");
+            add_child($$,node_con(strcat(cat,$3)));
         }
     ;
 DecList: Dec  {
-            $$=node_con(NULL);
+            $$=node_con("DecList");
             add_child($$,$1);
         }
         | Dec COMMA DecList {
-            $$=node_con(NULL);
+            $$=node_con("DecList");
             add_child($$,$1);
-            add_child($$,node_con($2));
+            strcpy(cat,"COMMA:");
+            add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
         ;
 Dec: VarDec {
-            $$=node_con(NULL);
+            $$=node_con("Dec");
             add_child($$,$1);
         }
     | VarDec ASSIGNOP Exp {
         printf("IN Dec\n");
-            $$=node_con(NULL);
+            $$=node_con("Dec");
             add_child($$,$1);
-            add_child($$,node_con($2));
+            strcpy(cat,"ASSIGNOP");
+            add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
     ;
 
 Exp: Exp ASSIGNOP Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"ASSIGNOP");
+        add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
     | Exp AND Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        add_child($$,node_con("AND:&&"));
         add_child($$,$3);
     }
     | Exp OR Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        add_child($$,node_con("OR:||"));
         add_child($$,$3);
     }
     | Exp RELOP {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"RELOP:");
+        add_child($$,node_con(strcat(cat,$2)));
     }
     | Exp PLUS Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"PLUS:");
+        add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
     | Exp MINUS Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"MINUS:");
+        add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
     | Exp STAR Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"STAR");
+        add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
     | Exp DIV Exp {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        add_child($$,node_con("DIV:/"));
         add_child($$,$3);
     }
     | LP Exp RP {
-        $$=node_con(NULL);
-        add_child($$,node_con($1));
+        $$=node_con("Exp");
+        add_child($$,node_con("LP:("));
         add_child($$,$2);
-        add_child($$,node_con($3));
+        add_child($$,node_con("RP:)"));
     }
     | MINUS Exp {
-        $$=node_con(NULL);
-        add_child($$,node_con($1));
+        $$=node_con("Exp");
+        strcpy(cat,"MINUS:");
+        add_child($$,node_con(strcat(cat,$1)));
         add_child($$,$2);
     }
     | NOT Exp {
-        $$=node_con(NULL);
-        add_child($$,node_con($1));
+        $$=node_con("Exp");
+        add_child($$,node_con("NOT:!"));
         add_child($$,$2);
     }
     | ID LP Args RP {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-        $$=node_con(NULL);
-        add_child($$,node_con($1));
-        add_child($$,node_con($2));
+        $$=node_con("Exp");
+        strcpy(cat,"ID:");
+        add_child($$,node_con(strcat(cat,$1)));
+        add_child($$,node_con("LP:("));
         add_child($$,$3);
-        add_child($$,node_con($4));
+        add_child($$,node_con("RP:)"));
     }
     | ID LP RP {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-        $$=node_con(NULL);
-        add_child($$,node_con($1));
-        add_child($$,node_con($2));
-        add_child($$,node_con($3));
+        $$=node_con("Exp");
+        strcpy(cat,"ID:");
+        add_child($$,node_con(strcat(cat,$1)));
+        add_child($$,node_con("LP:("));
+        add_child($$,node_con("RP:)"));
     }
     | Exp LB Exp RB {
-        $$=node_con(NULL);
+        $$=node_con("Exp");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        add_child($$,node_con("LB:["));
         add_child($$,$3);
-        add_child($$,node_con($4));
+        add_child($$,node_con("RB:]"));
     }
     | Exp DOT ID {
         if (is_in_symbol_table($3)){
             // TODO:
         }
-            $$=node_con(NULL);
+            $$=node_con("Exp");
             add_child($$,$1);
-            add_child($$,node_con($2));
-            add_child($$,node_con($3));
+            add_child($$,node_con("DOT:."));
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$3)));
     }
     | ID {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-            $$=node_con(NULL);
-            add_child($$,node_con($1));
+            $$=node_con("Exp");
+            strcpy(cat,"ID:");
+            add_child($$,node_con(strcat(cat,$1)));
     } 
     | INT {
-            $$=node_con(NULL);
-            add_child($$,node_con($1));
+            $$=node_con("Exp");
+            strcpy(cat,"INT:");
+            add_child($$,node_con(strcat(cat,$1)));
         }
     | FLOAT {
-            $$=node_con(NULL);
-            add_child($$,node_con($1));
+            $$=node_con("Exp");
+            strcpy(cat,"FLOAT:");
+            add_child($$,node_con(strcat(cat,$1)));
         }
     ;
 Args: Exp COMMA Args {
-        $$=node_con(NULL);
+        $$=node_con("Args");
         add_child($$,$1);
-        add_child($$,node_con($2));
+        strcpy(cat,"COMMA:");
+        add_child($$,node_con(strcat(cat,$2)));
         add_child($$,$3);
     }
     | Exp {
-        $$=node_con(NULL);
+        $$=node_con("Args");
         add_child($$,$1);
     }
     ;
@@ -434,7 +470,7 @@ node* node_con(char* str)
     new_node->level=0;
     new_node->children=NULL;
     if (str!=NULL){
-        printf("%s\n",str);
+        //printf("%s\n",str);
         new_node->code=strdup(str);
     }
     return new_node;
@@ -442,26 +478,37 @@ node* node_con(char* str)
 
 void add_child(node* parent, node* child)
 {
-    child_list* start=parent->children;
-    while(start!=NULL){
+    child_node* start=parent->children;
+    while(start!=NULL&&start->next!=NULL){
         start=start->next;
     }
-    start=(child_list*)malloc(sizeof(child_list));
+    if (start==NULL)
+        start=parent->children=(child_node*)malloc(sizeof(child_node));
+    else{
+        start->next=(child_node*)malloc(sizeof(child_node));
+        start=start->next;
+    }
     start->c=child;
     start->next=NULL;
-    printf("child:[%s] added into parent:[%s]\n",child->code,parent->code);
+    /*printf("child:[%s] added into parent:[%s]\n",child->code,parent->code);
+    start=parent->children;
+    printf("parent [%s] children:\n",parent->code);
+    for (int i=0;start!=NULL;i++,start=start->next){
+        printf("child %d is [%s]\n",i,start->c->code);
+    }*/
 }
 
 void print_tree(node* root, int level)
 {
-    if (root->children==NULL){
-        printf("%*s",level*4,root->code);
-    }
-    else {
-        printf("321\n");
-        child_list* start=root->children;
+    for (int i=0;i<level;i++)
+        printf("   ");
+    printf("%s\n",root->code);
+    if (root->children!=NULL){
+        //printf("321\n");
+        child_node* start=root->children;
         while (start!=NULL){
             print_tree(start->c,level+1);
+            start=start->next;
         }
     }
 }
@@ -502,6 +549,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     dup2(fd,0);*/
+    cat=(char*)malloc(sizeof(char)*64);
 	yyparse();
    // printf("%s\n",program_node->code);
 	return 0;

@@ -1,15 +1,15 @@
 
 
-typedef struct child_list{
+typedef struct child_node{
     struct node* c;
-    struct child_list* next;
-}child_list;
+    struct child_node* next;
+}child_node;
 
 typedef struct node
 {
     int type;
     int level;
-    child_list* children;
+    child_node* children;
     char* code;
 }node;
 
