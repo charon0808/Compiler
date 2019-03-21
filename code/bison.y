@@ -18,6 +18,8 @@
     char* empty="\"empty\"";
     char* cat;
     node* program_node;
+    extern int yylineno;
+    extern char* yytext;
     int yylex(void);
     void yyerror(char *);  
 %}
@@ -332,11 +334,12 @@ Exp: Exp ASSIGNOP Exp {
         add_child($$,node_con("OR:||"));
         add_child($$,$3);
     }
-    | Exp RELOP {
+    | Exp RELOP Exp{
         $$=node_con("Exp");
         add_child($$,$1);
         strcpy(cat,"RELOP:");
         add_child($$,node_con(strcat(cat,$2)));
+        add_child($$,$3);
     }
     | Exp PLUS Exp {
         $$=node_con("Exp");
@@ -531,8 +534,8 @@ int is_in_symbol_table(const char* symbol_name)
 
 
 void yyerror (char *s) {
-   fprintf (stderr, "%s\n", s);
- }
+   fprintf (stderr, "Error type B at line %d: %s before \"%s\"",yylineno, s,yytext);
+}
 
 int main(int argc, char* argv[]) {
     if (argc>1)

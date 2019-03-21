@@ -100,9 +100,9 @@ while            while
 {else}      {strcpy(yylval.name,yytext); return ELSE;}
 {int}       {strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
+{relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
 {plus}      {strcpy(yylval.name,yytext); return PLUS;}
-{relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {semi}      {strcpy(yylval.name,yytext); return SEMI;}
 {comma}     {strcpy(yylval.name,yytext); return COMMA;}
 {minus}     {strcpy(yylval.name,yytext); return MINUS;}
@@ -123,7 +123,7 @@ while            while
 {while}     {strcpy(yylval.name,yytext); return WHILE;}
 {typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
 {id}        {strcpy(yylval.name,yytext); return ID;}
-.           {strcpy(yylval.name,yytext); printf("error\n"); return -1;}
+.           {printf("Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); exit(1);}
 
 %%
 /*
