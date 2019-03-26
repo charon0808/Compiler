@@ -59,9 +59,9 @@ digit2           [1-9]
 digit3           [0-7]
 digit4           [0-9a-fA-F]
 power            E[+-]?({digit1})+
-int10            ({digit2}({digit1})*{power}?)|0
 int8             0{digit3}+
 intx             0[xX]{digit4}+
+int10            ({digit2}({digit1})*{power}?)|0
 int              {int10}|{int8}|{intx}
 float            {digit1}+\.{digit1}+({power})?
 id               {letter}({letter}|{digit1})*
@@ -96,15 +96,18 @@ return           return
 if               if
 else             else
 while            while
-
+comments1        \/\/(.)*
+comments2        \/\*(.|\n|\r\n)*?\*\/
 %option yylineno
 
 %%
 
+{comments1} {printf("comments1: [%s] at line %d\n",yytext,yylineno);}
+{comments2} {printf("comments2: [%s] at line %d\n",yytext,yylineno);}
 {ws}        {;}
 {if}        {strcpy(yylval.name,yytext); return IF;}
 {else}      {strcpy(yylval.name,yytext); return ELSE;}
-{int10}|{int8}|{intx}       {printf("INT:%s\n",yytext);strcpy(yylval.name,yytext); return INT;}
+{int8}|{int10}|{intx}       {printf("INT:%s\n",yytext);strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
 {relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
@@ -128,7 +131,7 @@ while            while
 {return}    {strcpy(yylval.name,yytext); return RETURN;}
 {while}     {strcpy(yylval.name,yytext); return WHILE;}
 {typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
-{id}        {printf("ID:%s",yytext);strcpy(yylval.name,yytext); return ID;}
+{id}        {printf("ID:%s\n",yytext);strcpy(yylval.name,yytext); return ID;}
 .           {fprintf(stderr, "Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); error=0;}
 
 %%

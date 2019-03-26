@@ -501,8 +501,12 @@ void add_child(node* parent, node* child)
 
 void print_tree(node* root, int level)
 {
+    if (root->children!=NULL&&strcmp(root->children->c->code,"\"empty\"")==0){
+        //printf("---This is empty---\n");
+        return;
+    }
     for (int i=0;i<level;i++)
-        printf("   ");
+        printf("  ");
     printf("%s\n",root->code);
     if (root->children!=NULL){
         child_node* start=root->children;
