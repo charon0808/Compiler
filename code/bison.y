@@ -4,8 +4,9 @@
     #include <string.h>
 
     #include "bison.h"
-
     #include "syntax.tab.h"
+
+    #define YYERROR_VERBOSE 1 
 
     symbol_list* _symbol_table_start=NULL;
 
@@ -18,10 +19,11 @@
     char* empty="\"empty\"";
     char* cat;
     node* program_node;
+    FILE* f;
     extern int yylineno;
     extern char* yytext;
     int yylex(void);
-    void yyerror(char *);  
+    void yyerror(const char *);  
     int error=1;
 %}
 
@@ -51,6 +53,8 @@
 %type <_node> CompSt StmtList Stmt
 %type <_node> DefList Def DecList Dec
 %type <_node> Exp Args
+
+%start Program
 
 %%
 Program: ExtDefList {
@@ -501,7 +505,6 @@ void print_tree(node* root, int level)
         printf("   ");
     printf("%s\n",root->code);
     if (root->children!=NULL){
-        //printf("321\n");
         child_node* start=root->children;
         while (start!=NULL){
             print_tree(start->c,level+1);
@@ -535,15 +538,15 @@ int is_in_symbol_table(const char* symbol_name)
 }
 
 
-void yyerror (char *s) {
+void yyerror (const char *s) {
     error=0;
-   fprintf (stderr, "Error type B at line %d: %s before \'%s\'\n",yylineno, s,yytext);
-   yyparse();
+    fprintf (stderr, "Error type B at line %d: %s\n",yylineno, s);
+    //yyparse();
 }
 
 int main(int argc, char* argv[]) {
     if (argc>1)
-        if (freopen(argv[1],"r",stdin)==NULL){
+        if ((f=freopen(argv[1],"r",stdin))==NULL){
             perror(argv[1]);
             return 1;
         }
