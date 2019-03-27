@@ -63,8 +63,8 @@ Program: ExtDefList {
         program_node=$$;
         if (error)
             print_tree($$,0);
-        //return 0;
     }
+    | error {;}
         ;
 ExtDefList: ExtDef ExtDefList {
         $$=node_con("ExtDefList");
@@ -75,6 +75,7 @@ ExtDefList: ExtDef ExtDefList {
             $$=node_con("ExtDefList");
             add_child($$,node_con(empty));
         }
+    | error {;}
         ;
 ExtDef: Specifier ExtDecList SEMI {
         $$=node_con("ExtDef");
@@ -96,6 +97,7 @@ ExtDef: Specifier ExtDecList SEMI {
         add_child($$,$2);
         add_child($$,$3);
     }
+    | error {;}
         ;
 ExtDecList: VarDec {
             $$=node_con("ExtDecList");
@@ -108,6 +110,7 @@ ExtDecList: VarDec {
             add_child($$,node_con(strcat(cat,$2)));
             add_child($$,$3);
         }
+    | error {;}
             ;
 
 Specifier: TYPE {
@@ -119,6 +122,7 @@ Specifier: TYPE {
         $$=node_con("Specifier");
         add_child($$,$1);
     }
+    | error {;}
         ;
 StructSpecifier: STRUCT OptTag LC DefList RC {
                     $$=node_con("StructSpecifier");
@@ -146,6 +150,7 @@ OptTag: ID {
             $$=node_con("OptTag");
             add_child($$,node_con(empty));
         }
+    | error {;}
         ;
 Tag: ID {
             if (!add_in2_symbol_table($1)){
@@ -155,6 +160,7 @@ Tag: ID {
             strcpy(cat,"ID:");
             add_child($$,node_con(strcat(cat,$1)));
         }
+    | error {;}
     ;
 
 VarDec: ID {
@@ -173,6 +179,7 @@ VarDec: ID {
             add_child($$,node_con(strcat(cat,$3)));
             add_child($$,node_con("RB:]"));
         }
+    | error {;}
         ;
 FunDec: ID LP VarList RP {
             if (!add_in2_symbol_table($1)){
@@ -195,6 +202,7 @@ FunDec: ID LP VarList RP {
             add_child($$,node_con("LP:("));
             add_child($$,node_con("RP:)"));
         }
+    | error {;}
         ;
 VarList: ParamDec COMMA VarList {
             $$=node_con("VarList");
@@ -207,12 +215,14 @@ VarList: ParamDec COMMA VarList {
             $$=node_con(NULL);
             add_child($$,$1);
         }
+    | error {;}
         ;
 ParamDec: Specifier VarDec {
             $$=node_con("ParamDec");
             add_child($$,$1);
             add_child($$,$2);
         }
+    | error {;}
         ;
 
 CompSt: LC DefList StmtList RC {
@@ -222,6 +232,7 @@ CompSt: LC DefList StmtList RC {
             add_child($$,$3);
             add_child($$,node_con("RC:}"));
         }
+    | error {;}
         ;
 StmtList: Stmt StmtList {
             $$=node_con("StmtList");
@@ -287,6 +298,7 @@ DefList: Def DefList {
             $$=node_con("DefList");
             add_child($$,node_con(empty));
         }
+    | error {;}
         ;
 Def: Specifier DecList SEMI {
             $$=node_con("Def");
@@ -295,6 +307,7 @@ Def: Specifier DecList SEMI {
             strcpy(cat,"SEMI:");
             add_child($$,node_con(strcat(cat,$3)));
         }
+    | error {;}
     ;
 DecList: Dec  {
             $$=node_con("DecList");
@@ -447,6 +460,7 @@ Exp: Exp ASSIGNOP Exp {
             strcpy(cat,"FLOAT:");
             add_child($$,node_con(strcat(cat,$1)));
         }
+    | error {;}
     ;
 Args: Exp COMMA Args {
         $$=node_con("Args");
@@ -507,7 +521,7 @@ void print_tree(node* root, int level)
     }
     for (int i=0;i<level;i++)
         printf("  ");
-    printf("%s\n",root->code);
+    printf("%s(%d)\n",root->code,level);
     if (root->children!=NULL){
         child_node* start=root->children;
         while (start!=NULL){

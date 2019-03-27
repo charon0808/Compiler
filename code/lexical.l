@@ -102,12 +102,12 @@ comments2        \/\*(.|\n|\r\n)*?\*\/
 
 %%
 
-{comments1} {printf("comments1: [%s] at line %d\n",yytext,yylineno);}
-{comments2} {printf("comments2: [%s] at line %d\n",yytext,yylineno);}
+{comments1} {;}
+{comments2} {;}
 {ws}        {;}
 {if}        {strcpy(yylval.name,yytext); return IF;}
 {else}      {strcpy(yylval.name,yytext); return ELSE;}
-{int8}|{int10}|{intx}       {printf("INT:%s\n",yytext);strcpy(yylval.name,yytext); return INT;}
+{int8}|{int10}|{intx}       {strcpy(yylval.name,yytext); return INT;}
 {float}     {strcpy(yylval.name,yytext); return FLOAT;}
 {relop}     {strcpy(yylval.name,yytext); return RELOP;}
 {assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
@@ -131,7 +131,7 @@ comments2        \/\*(.|\n|\r\n)*?\*\/
 {return}    {strcpy(yylval.name,yytext); return RETURN;}
 {while}     {strcpy(yylval.name,yytext); return WHILE;}
 {typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
-{id}        {printf("ID:%s\n",yytext);strcpy(yylval.name,yytext); return ID;}
+{id}        {strcpy(yylval.name,yytext); return ID;}
 .           {fprintf(stderr, "Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); error=0;}
 
 %%
@@ -145,7 +145,15 @@ int main(int argc,char* argv[])
     }
 }*/
 
+void intox_2_intd(char* str)
+{
+    if(strlen(strlen(str)>2&&(str[1]=='x'||str[1]=='X'))){   // 0x
 
+    }
+    else if(str[0]=='0'){    // 0...
+
+    }
+}
 
 int yywrap()
 {
