@@ -39,15 +39,16 @@
     #define RETURN 31
     #define WHILE 32 
     
-"<"         {strcpy(yylval.name,yytext); return LT;}
-"<="        {strcpy(yylval.name,yytext); return LE;}
-"=="        {strcpy(yylval.name,yytext); return EQ;}
-"!="        {strcpy(yylval.name,yytext); return NE;}
-">"         {strcpy(yylval.name,yytext); return GT;}
-">="        {strcpy(yylval.name,yytext); return GE;}
+"<"         {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return LT;}
+"<="        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return LE;}
+"=="        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return EQ;}
+"!="        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return NE;}
+">"         {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return GT;}
+">="        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return GE;}
     */
     extern int error;
     int lines=0;
+    int intox_2_intd(char*);
 %}
 
 /* regular definations */
@@ -105,33 +106,33 @@ comments2        \/\*(.|\n|\r\n)*?\*\/
 {comments1} {;}
 {comments2} {;}
 {ws}        {;}
-{if}        {strcpy(yylval.name,yytext); return IF;}
-{else}      {strcpy(yylval.name,yytext); return ELSE;}
-{int8}|{int10}|{intx}       {strcpy(yylval.name,yytext); return INT;}
-{float}     {strcpy(yylval.name,yytext); return FLOAT;}
-{relop}     {strcpy(yylval.name,yytext); return RELOP;}
-{assignop}  {strcpy(yylval.name,yytext); return ASSIGNOP;}
-{plus}      {strcpy(yylval.name,yytext); return PLUS;}
-{semi}      {strcpy(yylval.name,yytext); return SEMI;}
-{comma}     {strcpy(yylval.name,yytext); return COMMA;}
-{minus}     {strcpy(yylval.name,yytext); return MINUS;}
-{star}      {strcpy(yylval.name,yytext); return STAR;}
-{div}       {strcpy(yylval.name,yytext); return DIV;}
-{and}       {strcpy(yylval.name,yytext); return AND;}
-{or}        {strcpy(yylval.name,yytext); return OR;}
-{dot}       {strcpy(yylval.name,yytext); return DOT;}
-{not}       {strcpy(yylval.name,yytext); return NOT;}
-{lp}        {strcpy(yylval.name,yytext); return LP;}
-{rp}        {strcpy(yylval.name,yytext); return RP;}
-{lb}        {strcpy(yylval.name,yytext); return LB;}
-{rb}        {strcpy(yylval.name,yytext); return RB;}
-{lc}        {strcpy(yylval.name,yytext); return LC;}
-{rc}        {strcpy(yylval.name,yytext); return RC;}
-{struct}    {strcpy(yylval.name,yytext); return STRUCT;}
-{return}    {strcpy(yylval.name,yytext); return RETURN;}
-{while}     {strcpy(yylval.name,yytext); return WHILE;}
-{typeint}|{typefloat} {strcpy(yylval.name,yytext); return TYPE;}
-{id}        {strcpy(yylval.name,yytext); return ID;}
+{if}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return IF;}
+{else}      {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return ELSE;}
+{int8}|{int10}|{intx}       {strcpy(yylval.val.name,yytext); yylval.val.ival=intox_2_intd(yytext); yylval.lineno=yyline; return INT;}
+{float}     {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return FLOAT;}
+{relop}     {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return RELOP;}
+{assignop}  {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return ASSIGNOP;}
+{plus}      {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return PLUS;}
+{semi}      {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return SEMI;}
+{comma}     {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return COMMA;}
+{minus}     {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return MINUS;}
+{star}      {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return STAR;}
+{div}       {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return DIV;}
+{and}       {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return AND;}
+{or}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return OR;}
+{dot}       {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return DOT;}
+{not}       {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return NOT;}
+{lp}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return LP;}
+{rp}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return RP;}
+{lb}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return LB;}
+{rb}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return RB;}
+{lc}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return LC;}
+{rc}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return RC;}
+{struct}    {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return STRUCT;}
+{return}    {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return RETURN;}
+{while}     {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return WHILE;}
+{typeint}|{typefloat} {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return TYPE;}
+{id}        {strcpy(yylval.val.name,yytext); yylval.lineno=yyline; return ID;}
 .           {fprintf(stderr, "Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); error=0;}
 
 %%
@@ -145,14 +146,32 @@ int main(int argc,char* argv[])
     }
 }*/
 
-void intox_2_intd(char* str)
+int intox_2_intd(char* str)
 {
-    if(strlen(strlen(str)>2&&(str[1]=='x'||str[1]=='X'))){   // 0x
-
+    int sum=0;
+    if(strlen(str)>2&&(str[1]=='x'||str[1]=='X')){   // 0x
+        int ii=1;
+        for(int i=strlen(str)-1;i>=2;i--){
+            if (str[i]<='9'&&str[i]>='0'){
+                sum+=(str[i]-'0')*ii;
+            }
+            else if (str[i]<='F'&&str[i]>='A'){
+                sum+=(str[i]-'A'+10)*ii;
+            }
+            else if (str[i]<='f'&&str[i]>='a'){
+                sum+=(str[i]-'a'+10)*ii;
+            }
+            ii*=16;
+        }
     }
     else if(str[0]=='0'){    // 0...
-
+        int ii=1;
+        for (int i=strlen(str)-1;i>=1;i--){
+            sum+=(str[i]-'0')*ii;
+            ii*=8;
+        }
     }
+    return sum;
 }
 
 int yywrap()

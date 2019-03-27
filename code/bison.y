@@ -28,24 +28,24 @@
 %}
 
 %union{
-    union value val;
+    struct value val;
     node* _node;
     char name[32];
 }
 
 %token WS
-%token <name> INT FLOAT
-%token <name> ID
-%token <name> SEMI COMMA ASSIGNOP
-%token <name> LT LE EQ NE GT GE
-%token <name> PLUS MINUS
-%token <name> STAR
-%token <name> DIV AND OR DOT NOT
-%token <name> LP RP LB RB LC RC
-%token <name> STRUCT RETURN
-%token <name> IF ELSE WHILE
-%token <name> TYPE
-%token <name> RELOP
+%token <val> INT FLOAT
+%token <val> ID
+%token <val> SEMI COMMA ASSIGNOP
+%token <val> LT LE EQ NE GT GE
+%token <val> PLUS MINUS
+%token <val> STAR
+%token <val> DIV AND OR DOT NOT
+%token <val> LP RP LB RB LC RC
+%token <val> STRUCT RETURN
+%token <val> IF ELSE WHILE
+%token <val> TYPE
+%token <val> RELOP
 
 %type <_node> Program ExtDefList ExtDef ExtDecList 
 %type <_node> Specifier StructSpecifier OptTag Tag
@@ -452,8 +452,9 @@ Exp: Exp ASSIGNOP Exp {
     } 
     | INT {
             $$=node_con("Exp");
-            strcpy(cat,"INT:");
-            add_child($$,node_con(strcat(cat,$1)));
+            //strcpy(cat,"INT:");
+            sprintf(cat,"INT:%s:%d",$1,yylval.val.ival);
+            add_child($$,node_con(cat));
         }
     | FLOAT {
             $$=node_con("Exp");
@@ -485,9 +486,9 @@ node* node_con(char* str)
     new_node->level=0;
     new_node->children=NULL;
     if (str!=NULL){
-        //printf("%s\n",str);
         new_node->code=strdup(str);
     }
+    new_node->lineno=yylineno;
     return new_node;
 }
 
@@ -513,15 +514,41 @@ void add_child(node* parent, node* child)
     }*/
 }
 
+
+int _min;
+int tree_find_min(node* root)
+{
+    if (root->lineno<_min){
+        //printf("\nnode: %s, lineno:%d\n",root->code,root->lineno);
+        _min=root->lineno;
+    }
+    if (root->children!=NULL){
+        child_node* start=root->children;
+        while (start!=NULL){
+            tree_find_min(start->c);
+            start=start->next;
+        }
+    }
+    return _min;
+}
+
 void print_tree(node* root, int level)
 {
     if (root->children!=NULL&&strcmp(root->children->c->code,"\"empty\"")==0){
         //printf("---This is empty---\n");
         return;
     }
+
     for (int i=0;i<level;i++)
         printf("  ");
-    printf("%s(%d)\n",root->code,level);
+    printf("%s",root->code);
+    if (root->children!=NULL){
+        _min=0x3f3f3f3f;
+        root->lineno=tree_find_min(root);
+    }
+        printf("(%d)",root->lineno);
+    printf("\n");
+
     if (root->children!=NULL){
         child_node* start=root->children;
         while (start!=NULL){
