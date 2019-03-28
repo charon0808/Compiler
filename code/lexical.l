@@ -108,7 +108,7 @@ comments2        \/\*(.|\n|\r\n)*?\*\/
 {ws}        {;}
 {if}        {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return IF;}
 {else}      {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ELSE;}
-{int8}|{int10}|{intx}       {strcpy(yylval.val.name,yytext); yylval.val.ival=intox_2_intd(yytext); yylval.val.lineno=yylineno; return INT;}
+{int8}|{int10}|{intx}       {yylval.val.ival=intox_2_intd(yytext); yylval.val.lineno=yylineno; return INT;}
 {float}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return FLOAT;}
 {relop}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return RELOP;}
 {assignop}  {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ASSIGNOP;}
@@ -171,6 +171,7 @@ int intox_2_intd(char* str)
             ii*=8;
         }
     }
+    else sum=atoi(str);
     return sum;
 }
 
