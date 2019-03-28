@@ -110,7 +110,7 @@ comments2        "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
 {if}        {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return IF;}
 {else}      {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ELSE;}
 {int8}|{int10}|{intx}       {yylval.val.ival=intox_2_intd(yytext); yylval.val.lineno=yylineno; return INT;}
-{float}     {strcpy(yylval.val.name,yytext); yylval.val.fval=atof(yytext); yylval.val.lineno=yylineno; return FLOAT;}
+{float}     {yylval.val.fval=atof(yytext); yylval.val.lineno=yylineno; return FLOAT;}
 {relop}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return RELOP;}
 {assignop}  {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ASSIGNOP;}
 {plus}      {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return PLUS;}

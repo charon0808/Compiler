@@ -8,7 +8,6 @@ typedef struct child_node
 
 typedef struct node
 {
-    int type;
     int level;
     child_node *children;
     char *code;

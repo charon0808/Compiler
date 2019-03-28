@@ -11,11 +11,15 @@
     symbol_list* _symbol_table_start=NULL;
 
     void bison_error(const char*);
+    
     node* node_con(char*);
     void add_child(node*,node*);
+    void print_tree(node*, int);
+    void free_all(node*);
+
     int add_in2_symbol_table(struct value);
     int is_in_symbol_table(struct value);
-    void print_tree(node*, int);
+
     char* empty="\"empty\"";
     char* cat;
     node* program_node;
@@ -30,18 +34,21 @@
 %union{
     struct value val;
     node* _node;
-    char name[32];
 }
 
 %token WS
 %token <val> INT FLOAT
 %token <val> ID
-%token <val> SEMI COMMA ASSIGNOP
-%token <val> LT LE EQ NE GT GE
-%token <val> PLUS MINUS
+%token <val> SEMI COMMA 
+%right <val> ASSIGNOP
+%left  <val> LT LE EQ NE GT GE
+%left  <val> PLUS MINUS
 %token <val> STAR
-%token <val> DIV AND OR DOT NOT
-%token <val> LP RP LB RB LC RC
+%left  <val> DIV AND OR 
+%right <val> NOT
+%left  <val> DOT
+%left  <val> LP RP LB RB 
+%token <val> LC RC
 %token <val> STRUCT RETURN
 %token <val> IF ELSE WHILE
 %token <val> TYPE
@@ -61,8 +68,10 @@ Program: ExtDefList {
         $$=node_con("Program");
         add_child($$,$1);
         program_node=$$;
-        if (error)
+        if (error){
             print_tree($$,0);
+            free_all($$);
+        }
     }
     | error {;}
         ;
@@ -571,6 +580,18 @@ int is_in_symbol_table(struct value symbol)
     return 0;
 }
 
+void free_all(node* root)
+{
+    if (root->children!=NULL){
+        child_node* start=root->children;
+        while (start!=NULL){
+            free_all(start->c);
+            start=start->next;
+        }
+    }
+    free(root->code);
+    free(root);
+}
 
 void yyerror (const char *s) {
     error=0;
