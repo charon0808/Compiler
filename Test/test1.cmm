@@ -1,15 +1,5 @@
-
 int main()
 {
-    struct a{
-        int a;
-        int b;
-    }a;
-    float a[10][2];
-    int i=01;   /// dsafdsaf
-    a[5][1] = 1.5;
-    if (a[1][2] == 0)  /*/**/*/
-        i = 1;
-    else 
-        i=0;
+    int i = 1;
+    int j = ~i;
 }

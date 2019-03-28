@@ -59,12 +59,12 @@ digit1           [0-9]
 digit2           [1-9]
 digit3           [0-7]
 digit4           [0-9a-fA-F]
-power            E[+-]?({digit1})+
+power            [eE][+-]?({digit1})+
 int8             0{digit3}+
 intx             0[xX]{digit4}+
 int10            ({digit2}({digit1})*{power}?)|0
 int              {int10}|{int8}|{intx}
-float            {digit1}+\.{digit1}+({power})?
+float            {digit1}*\.{digit1}+({power})?
 id               {letter}({letter}|{digit1})*
 semi             ;
 comma            ,
@@ -98,18 +98,19 @@ if               if
 else             else
 while            while
 comments1        \/\/(.)*
-comments2        \/\*(.|\n|\r\n)*?\*\/
+comments2        "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
 %option yylineno
 
 %%
 
 {comments1} {;}
-{comments2} {;}
+{comments2} {char a=' '; while(a==' '||a=='\r'||a=='\n') a=input(); char b=input(); if(a!='*'||b!='/'){unput(b); unput(a);}
+            else {error=0; fprintf(stderr,"Error type B at line %d: Syntax error.\n",yylineno);}}
 {ws}        {;}
 {if}        {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return IF;}
 {else}      {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ELSE;}
 {int8}|{int10}|{intx}       {yylval.val.ival=intox_2_intd(yytext); yylval.val.lineno=yylineno; return INT;}
-{float}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return FLOAT;}
+{float}     {strcpy(yylval.val.name,yytext); yylval.val.fval=atof(yytext); yylval.val.lineno=yylineno; return FLOAT;}
 {relop}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return RELOP;}
 {assignop}  {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ASSIGNOP;}
 {plus}      {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return PLUS;}
