@@ -546,7 +546,7 @@ void print_tree(node* root, int level)
     if (root->children!=NULL){
         _min=0x3f3f3f3f;
         root->lineno=tree_find_min(root);
-        printf("(%d)",root->lineno);
+        printf(" (%d)",root->lineno);
     }
     printf("\n");
 
