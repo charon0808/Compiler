@@ -12,6 +12,7 @@ typedef struct node
     child_node *children;
     char *code;
     int lineno;
+    int typeno;
 } node;
 
 struct value

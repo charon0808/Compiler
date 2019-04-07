@@ -8,7 +8,8 @@
 
     #define YYERROR_VERBOSE 1 
 
-    symbol_list* _symbol_table_start=NULL;
+    symbol_list* _var_symbol_table_start=NULL;
+    symbol_list* _fun_symbol_table_start=NULL;
 
     void bison_error(const char*);
     
@@ -65,7 +66,7 @@
 
 %%
 Program: ExtDefList {
-        $$=node_con("Program");
+        $$=node_con("Program", 0);
         add_child($$,$1);
         program_node=$$;
         if (error){
@@ -76,30 +77,30 @@ Program: ExtDefList {
     | error {;}
         ;
 ExtDefList: ExtDef ExtDefList {
-        $$=node_con("ExtDefList");
+        $$=node_con("ExtDefList", 1);
         add_child($$,$1);
         add_child($$,$2);
     }
         | {
-            $$=node_con("ExtDefList");
+            $$=node_con("ExtDefList", 1);
             add_child($$,node_con(empty));
         }
     | error {;}
         ;
 ExtDef: Specifier ExtDecList SEMI {
-        $$=node_con("ExtDef");
+        $$=node_con("ExtDef", 2);
         add_child($$,$1);
         add_child($$,$2);
         add_child($$,node_con("SEMI"));
         child_node* start=$$->children;
     }
         | Specifier SEMI {
-        $$=node_con("ExtDef");
+        $$=node_con("ExtDef", 2);
         add_child($$,$1);
         add_child($$,node_con("SEMI"));
     }
         | Specifier FunDec CompSt {
-        $$=node_con("ExtDef");
+        $$=node_con("ExtDef", 2);
         add_child($$,$1);
         add_child($$,$2);
         add_child($$,$3);
@@ -107,11 +108,11 @@ ExtDef: Specifier ExtDecList SEMI {
     | error {;}
         ;
 ExtDecList: VarDec {
-            $$=node_con("ExtDecList");
+            $$=node_con("ExtDecList", 3);
             add_child($$,$1);
         }
         | VarDec COMMA ExtDecList {
-            $$=node_con("ExtDecList");
+            $$=node_con("ExtDecList", 3);
             add_child($$,$1);
             add_child($$,node_con("COMMA"));
             add_child($$,$3);
@@ -120,18 +121,18 @@ ExtDecList: VarDec {
             ;
 
 Specifier: TYPE {
-        $$=node_con("Specifier");
+        $$=node_con("Specifier", 4);
         strcpy(cat,"TYPE: ");
         add_child($$,node_con(strcat(cat,$1.name)));
         }
         | StructSpecifier {
-        $$=node_con("Specifier");
+        $$=node_con("Specifier", 4);
         add_child($$,$1);
     }
     | error {;}
         ;
 StructSpecifier: STRUCT OptTag LC DefList RC {
-                    $$=node_con("StructSpecifier");
+                    $$=node_con("StructSpecifier", 5);
                     sprintf(cat,"%d^STRUCT",$1.lineno);
                     add_child($$,node_con(cat));
                     add_child($$,$2);
@@ -140,7 +141,7 @@ StructSpecifier: STRUCT OptTag LC DefList RC {
                     add_child($$,node_con("RC"));
                 }
                 | STRUCT Tag {
-                    $$=node_con("StructSpecifier");
+                    $$=node_con("StructSpecifier", 5);
                     sprintf(cat,"%d^STRUCT",$1.lineno);
                     add_child($$,node_con(cat));
                     add_child($$,$2);
@@ -175,12 +176,12 @@ VarDec: ID {
         if (!add_in2_symbol_table($1)){
             // TODO: if symbol already exists}
         }
-            $$=node_con("VarDec");
+            $$=node_con("VarDec", 6);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name)));
         }
         | VarDec LB INT RB {
-            $$=node_con("VarDec");
+            $$=node_con("VarDec", 6);
             add_child($$,($1));
             add_child($$,node_con("LB"));
             strcpy(cat,"INT: ");
@@ -193,7 +194,7 @@ FunDec: ID LP VarList RP {
             if (!add_in2_symbol_table($1)){
                 // TODO: if symbol already exists}
             }
-            $$=node_con("FunDec");
+            $$=node_con("FunDec", 7);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name)));
             add_child($$,node_con("LP"));
@@ -204,7 +205,7 @@ FunDec: ID LP VarList RP {
             if (!add_in2_symbol_table($1)){
                 // TODO: if symbol already exists}
             }
-            $$=node_con("FunDec");
+            $$=node_con("FunDec", 7);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name)));
             add_child($$,node_con("LP"));
@@ -213,7 +214,7 @@ FunDec: ID LP VarList RP {
     | error {;}
         ;
 VarList: ParamDec COMMA VarList {
-            $$=node_con("VarList");
+            $$=node_con("VarList", 8);
             add_child($$,$1);
             add_child($$,node_con("COMMA"));
             add_child($$,$3);
@@ -225,7 +226,7 @@ VarList: ParamDec COMMA VarList {
     | error {;}
         ;
 ParamDec: Specifier VarDec {
-            $$=node_con("ParamDec");
+            $$=node_con("ParamDec", 9);
             add_child($$,$1);
             add_child($$,$2);
         }
@@ -233,7 +234,7 @@ ParamDec: Specifier VarDec {
         ;
 
 CompSt: LC DefList StmtList RC {
-            $$=node_con("CompSt");
+            $$=node_con("CompSt", 10);
             sprintf(cat,"%d^LC",$1.lineno);
             add_child($$,node_con(cat));
             add_child($$,$2);
@@ -243,32 +244,32 @@ CompSt: LC DefList StmtList RC {
     | error {;}
         ;
 StmtList: Stmt StmtList {
-            $$=node_con("StmtList");
+            $$=node_con("StmtList", 12);
             add_child($$,$1);
             add_child($$,$2);
             }
         | {
-            $$=node_con("StmtList");
+            $$=node_con("StmtList", 12);
             add_child($$,node_con(empty));
         }
         ;
 Stmt: Exp SEMI {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,$1);
             add_child($$,node_con("SEMI"));
         }
         | CompSt {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,$1);
         }
         | RETURN Exp SEMI {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,node_con("RETURN"));
             add_child($$,$2);
             add_child($$,node_con("SEMI"));
         }
         | IF LP Exp RP Stmt {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,node_con("IF"));
             add_child($$,node_con("LP"));
             add_child($$,$3);
@@ -276,7 +277,7 @@ Stmt: Exp SEMI {
             add_child($$,$5);
         }
         | IF LP Exp RP Stmt ELSE Stmt {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,node_con("IF"));
             add_child($$,node_con("LP"));
             add_child($$,$3);
@@ -286,7 +287,7 @@ Stmt: Exp SEMI {
             add_child($$,$7);
         }
         | WHILE LP Exp RP Stmt {
-            $$=node_con("Stmt");
+            $$=node_con("Stmt", 13);
             add_child($$,node_con("WHILE"));
             add_child($$,node_con("LP"));
             add_child($$,$3);
@@ -296,18 +297,18 @@ Stmt: Exp SEMI {
         ;
 
 DefList: Def DefList {
-            $$=node_con("DefList");
+            $$=node_con("DefList", 11);
             add_child($$,$1);
             add_child($$,$2);
         }
         | {
-            $$=node_con("DefList");
+            $$=node_con("DefList", 11);
             add_child($$,node_con(empty));
         }
     | error {;}
         ;
 Def: Specifier DecList SEMI {
-            $$=node_con("Def");
+            $$=node_con("Def", 14);
             add_child($$,$1);
             add_child($$,$2);
             add_child($$,node_con("SEMI"));
@@ -338,67 +339,67 @@ Dec: VarDec {
     ;
 
 Exp: Exp ASSIGNOP Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("ASSIGNOP"));
         add_child($$,$3);
     }
     | Exp AND Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("AND"));
         add_child($$,$3);
     }
     | Exp OR Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("OR"));
         add_child($$,$3);
     }
     | Exp RELOP Exp{
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         strcpy(cat,"RELOP: ");
         add_child($$,node_con(strcat(cat,$2.name)));
         add_child($$,$3);
     }
     | Exp PLUS Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("PLUS"));
         add_child($$,$3);
     }
     | Exp MINUS Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("MINUS"));
         add_child($$,$3);
     }
     | Exp STAR Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("STAR"));
         add_child($$,$3);
     }
     | Exp DIV Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("DIV"));
         add_child($$,$3);
     }
     | LP Exp RP {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,node_con("LP"));
         add_child($$,$2);
         add_child($$,node_con("RP"));
     }
     | MINUS Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,node_con("MINUS"));
         add_child($$,$2);
     }
     | NOT Exp {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,node_con("NOT"));
         add_child($$,$2);
     }
@@ -406,7 +407,7 @@ Exp: Exp ASSIGNOP Exp {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         strcpy(cat,"ID: ");
         add_child($$,node_con(strcat(cat,$1.name)));
         add_child($$,node_con("LP"));
@@ -417,14 +418,14 @@ Exp: Exp ASSIGNOP Exp {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         strcpy(cat,"ID: ");
         add_child($$,node_con(strcat(cat,$1.name)));
         add_child($$,node_con("LP"));
         add_child($$,node_con("RP"));
     }
     | Exp LB Exp RB {
-        $$=node_con("Exp");
+        $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("LB"));
         add_child($$,$3);
@@ -434,7 +435,7 @@ Exp: Exp ASSIGNOP Exp {
         if (is_in_symbol_table($3)){
             // TODO:
         }
-            $$=node_con("Exp");
+            $$=node_con("Exp", 15);
             add_child($$,$1);
             add_child($$,node_con("DOT"));
             strcpy(cat,"ID: ");
@@ -444,17 +445,17 @@ Exp: Exp ASSIGNOP Exp {
         if (is_in_symbol_table($1)){
             // TODO:
         }
-            $$=node_con("Exp");
+            $$=node_con("Exp", 15);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name)));
     } 
     | INT {
-            $$=node_con("Exp");
+            $$=node_con("Exp", 15);
             sprintf(cat,"INT: %d",yylval.val.ival);
             add_child($$,node_con(cat));
         }
     | FLOAT {
-            $$=node_con("Exp");
+            $$=node_con("Exp", 15);
             sprintf(cat,"FLOAT: %f",$1.fval);
             add_child($$,node_con(cat));
         }
@@ -476,136 +477,3 @@ Args: Exp COMMA Args {
 
 //void print_tree()
 
-node* node_con(char* str)
-{
-    node* new_node=(node *)malloc(sizeof(node));
-    char* tmp;
-    if ((tmp=strstr(str,"^"))!=NULL){  // line^SYMBOL
-
-        tmp[0]='\0';
-        new_node->lineno=atoi(str);
-        str=&tmp[1];
-    }
-    else new_node->lineno=yylineno;
-    new_node->level=0;
-    new_node->children=NULL;
-    new_node->code=strdup(str);
-    return new_node;
-}
-
-void add_child(node* parent, node* child)
-{
-    child_node* start=parent->children;
-    while(start!=NULL&&start->next!=NULL){
-        start=start->next;
-    }
-    if (start==NULL)
-        start=parent->children=(child_node*)malloc(sizeof(child_node));
-    else{
-        start->next=(child_node*)malloc(sizeof(child_node));
-        start=start->next;
-    }
-    start->c=child;
-    start->next=NULL;
-}
-
-
-int _min;
-int tree_find_min(node* root)
-{
-    if (root->lineno<_min){
-        //printf("\nnode: %s, lineno:%d\n",root->code,root->lineno);
-        _min=root->lineno;
-    }
-    if (root->children!=NULL){
-        child_node* start=root->children;
-        while (start!=NULL){
-            tree_find_min(start->c);
-            start=start->next;
-        }
-    }
-    return _min;
-}
-
-void print_tree(node* root, int level)
-{
-    if (root->children!=NULL&&strcmp(root->children->c->code,"\"empty\"")==0){
-        //printf("---This is empty---\n");
-        return;
-    }
-
-    for (int i=0;i<level;i++)
-        printf("  ");
-    printf("%s",root->code);
-    
-    if (root->children!=NULL){
-        _min=0x3f3f3f3f;
-        root->lineno=tree_find_min(root);
-        printf(" (%d)",root->lineno);
-    }
-    printf("\n");
-
-    if (root->children!=NULL){
-        child_node* start=root->children;
-        while (start!=NULL){
-            print_tree(start->c,level+1);
-            start=start->next;
-        }
-    }
-}
-
-int add_in2_symbol_table(struct value symbol)
-{
-    char* symbol_name=symbol.name;
-    symbol_list* start=_symbol_table_start;
-    while(start!=NULL){
-        if(strcmp(start->symbol_name,symbol_name)==0)
-            return 0;     // this ID already exists
-        start=start->next;
-    }
-    start=(symbol_list*)malloc(sizeof(symbol_list));
-    start->next=NULL;
-    start->symbol_name=strdup(symbol_name);
-    return 1;
-}
-
-int is_in_symbol_table(struct value symbol)
-{
-    char* symbol_name=symbol.name;
-    symbol_list* start=_symbol_table_start;
-    while(start!=NULL){
-        if(strcmp(start->symbol_name,symbol_name)==0)
-            return 1; 
-    }
-    return 0;
-}
-
-void free_all(node* root)
-{
-    if (root->children!=NULL){
-        child_node* start=root->children;
-        while (start!=NULL){
-            free_all(start->c);
-            start=start->next;
-        }
-    }
-    free(root->code);
-    free(root);
-}
-
-void yyerror (const char *s) {
-    error=0;
-    fprintf (stderr, "Error type B at line %d: %s\n",yylineno, s);
-    //yyparse();
-}
-
-int main(int argc, char* argv[]) {
-    if (argc>1)
-        if ((f=freopen(argv[1],"r",stdin))==NULL){
-            perror(argv[1]);
-            return 1;
-        }
-    cat=(char*)malloc(sizeof(char)*64);
-	yyparse();
-	return 0;
-}
