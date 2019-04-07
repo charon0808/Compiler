@@ -3,13 +3,14 @@
     #include <stdlib.h>
     #include <string.h>
 
+    #include "errortype.h"
     #include "bison.h"
     #include "syntax.tab.h"
 
     #define YYERROR_VERBOSE 1 
 
     symbol_list* _var_symbol_table_start=NULL;
-    symbol_list* _fun_symbol_table_start=NULL;
+    symbol_list* _func_symbol_table_start=NULL;
 
     void bison_error(const char*);
     
@@ -17,9 +18,6 @@
     void add_child(node*,node*);
     void print_tree(node*, int);
     void free_all(node*);
-
-    int add_in2_symbol_table(struct value);
-    int is_in_symbol_table(struct value);
 
     char* empty="\"empty\"";
     char* cat;
@@ -71,6 +69,7 @@ Program: ExtDefList {
         program_node=$$;
         if (error){
             print_tree($$,0);
+            func($$);
             free_all($$);
         }
     }
@@ -148,9 +147,6 @@ StructSpecifier: STRUCT OptTag LC DefList RC {
                 }
                 ;
 OptTag: ID {
-            if (!add_in2_symbol_table($1)){
-                // TODO: if symbol already exists}
-            }
             $$=node_con("OptTag",19);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -162,9 +158,6 @@ OptTag: ID {
     | error {;}
         ;
 Tag: ID {
-            if (!add_in2_symbol_table($1)){
-                // TODO: if symbol already exists}
-            }
             $$=node_con("Tag",18);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -173,9 +166,6 @@ Tag: ID {
     ;
 
 VarDec: ID {
-        if (!add_in2_symbol_table($1)){
-            // TODO: if symbol already exists}
-        }
             $$=node_con("VarDec", 6);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -191,9 +181,6 @@ VarDec: ID {
     | error {;}
         ;
 FunDec: ID LP VarList RP {
-            if (!add_in2_symbol_table($1)){
-                // TODO: if symbol already exists}
-            }
             $$=node_con("FunDec", 7);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -202,9 +189,6 @@ FunDec: ID LP VarList RP {
             add_child($$,node_con("RP",-1));
         }
         | ID LP RP {
-            if (!add_in2_symbol_table($1)){
-                // TODO: if symbol already exists}
-            }
             $$=node_con("FunDec", 7);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -404,9 +388,6 @@ Exp: Exp ASSIGNOP Exp {
         add_child($$,$2);
     }
     | ID LP Args RP {
-        if (is_in_symbol_table($1)){
-            // TODO:
-        }
         $$=node_con("Exp", 15);
         strcpy(cat,"ID: ");
         add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -415,9 +396,6 @@ Exp: Exp ASSIGNOP Exp {
         add_child($$,node_con("RP",-1));
     }
     | ID LP RP {
-        if (is_in_symbol_table($1)){
-            // TODO:
-        }
         $$=node_con("Exp", 15);
         strcpy(cat,"ID: ");
         add_child($$,node_con(strcat(cat,$1.name),-1));
@@ -432,9 +410,6 @@ Exp: Exp ASSIGNOP Exp {
         add_child($$,node_con("RB",-1));
     }
     | Exp DOT ID {
-        if (is_in_symbol_table($3)){
-            // TODO:
-        }
             $$=node_con("Exp", 15);
             add_child($$,$1);
             add_child($$,node_con("DOT",-1));
@@ -442,9 +417,6 @@ Exp: Exp ASSIGNOP Exp {
             add_child($$,node_con(strcat(cat,$3.name),-1));
     }
     | ID {
-        if (is_in_symbol_table($1)){
-            // TODO:
-        }
             $$=node_con("Exp", 15);
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$1.name),-1));

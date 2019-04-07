@@ -3,12 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "errortype.h"
 #include "bison.h"
 #include "syntax.tab.h"
 
 extern int yylineno;
 extern symbol_list *_var_symbol_table_start;
-extern symbol_list *_fun_symbol_table_start;
+extern symbol_list *_func_symbol_table_start;
 extern int error;
 extern FILE *f;
 extern char *cat;
@@ -22,7 +23,6 @@ node *node_con(char *str, int tno)
     char *tmp;
     if ((tmp = strstr(str, "^")) != NULL)
     { // line^SYMBOL
-
         tmp[0] = '\0';
         new_node->lineno = atoi(str);
         str = &tmp[1];
@@ -33,6 +33,7 @@ node *node_con(char *str, int tno)
     new_node->children = NULL;
     new_node->code = strdup(str);
     new_node->typeno = tno;
+    new_node->child_num=0;
     return new_node;
 }
 
@@ -50,6 +51,7 @@ void add_child(node *parent, node *child)
         start->next = (child_node *)malloc(sizeof(child_node));
         start = start->next;
     }
+    parent->child_num++;
     start->c = child;
     start->next = NULL;
 }
@@ -103,34 +105,6 @@ void print_tree(node *root, int level)
             start = start->next;
         }
     }
-}
-
-int add_in2_symbol_table(struct value symbol, int which_table /* 0 for var table, 1 for fun*/)
-{
-    char *symbol_name = symbol.name;
-    symbol_list *start = which_table == 0 ? _var_symbol_table_start : _fun_symbol_table_start;
-    while (start != NULL)
-    {
-        if (strcmp(start->symbol_name, symbol_name) == 0)
-            return 0; // this ID already exists
-        start = start->next;
-    }
-    start = (symbol_list *)malloc(sizeof(symbol_list));
-    start->next = NULL;
-    start->symbol_name = strdup(symbol_name);
-    return 1;
-}
-
-int is_in_symbol_table(struct value symbol, int which_table /* 0 for var table, 1 for fun*/)
-{
-    char *symbol_name = symbol.name;
-    symbol_list *start = which_table == 0 ? _var_symbol_table_start : _fun_symbol_table_start;
-    while (start != NULL)
-    {
-        if (strcmp(start->symbol_name, symbol_name) == 0)
-            return 1;
-    }
-    return 0;
 }
 
 void free_all(node *root)
