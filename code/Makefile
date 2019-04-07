@@ -39,7 +39,7 @@ test: clean
 git: clean
 	git add ..
 	git commit -m "update"
-	git push -u origin master
+	git push -u ssh_origin master
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

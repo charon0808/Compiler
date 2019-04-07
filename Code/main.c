@@ -16,7 +16,7 @@ extern int yylex(void);
 extern void yyerror(const char *);
 extern char *strdup(const char *s);
 
-node *node_con(char *str)
+node *node_con(char *str, int tno)
 {
     node *new_node = (node *)malloc(sizeof(node));
     char *tmp;
@@ -32,6 +32,7 @@ node *node_con(char *str)
     new_node->level = 0;
     new_node->children = NULL;
     new_node->code = strdup(str);
+    new_node->typeno = tno;
     return new_node;
 }
 
