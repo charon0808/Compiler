@@ -344,31 +344,31 @@ Exp: Exp ASSIGNOP Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
         strcpy(cat,"RELOP: ");
-        add_child($$,node_con(strcat(cat,$2.name),-1));
+        add_child($$,node_con(strcat(cat,$2.name),-3));
         add_child($$,$3);
     }
     | Exp PLUS Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("PLUS", -1));
+        add_child($$,node_con("PLUS", -4));
         add_child($$,$3);
     }
     | Exp MINUS Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("MINUS", -1));
+        add_child($$,node_con("MINUS", -4));
         add_child($$,$3);
     }
     | Exp STAR Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("STAR", -1));
+        add_child($$,node_con("STAR", -4));
         add_child($$,$3);
     }
     | Exp DIV Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("DIV", -1));
+        add_child($$,node_con("DIV", -4));
         add_child($$,$3);
     }
     | LP Exp RP {
@@ -384,7 +384,7 @@ Exp: Exp ASSIGNOP Exp {
     }
     | NOT Exp {
         $$=node_con("Exp", 15);
-        add_child($$,node_con("NOT", -1));
+        add_child($$,node_con("NOT", -3));
         add_child($$,$2);
     }
     | ID LP Args RP {
@@ -412,7 +412,7 @@ Exp: Exp ASSIGNOP Exp {
     | Exp DOT ID {
             $$=node_con("Exp", 15);
             add_child($$,$1);
-            add_child($$,node_con("DOT",-1));
+            add_child($$,node_con("DOT",-5));
             strcpy(cat,"ID: ");
             add_child($$,node_con(strcat(cat,$3.name),-1));
     }
@@ -424,12 +424,12 @@ Exp: Exp ASSIGNOP Exp {
     | INT {
             $$=node_con("Exp", 15);
             sprintf(cat,"INT: %d",yylval.val.ival);
-            add_child($$,node_con(cat,-1));
+            add_child($$,node_con(cat,-6));
         }
     | FLOAT {
             $$=node_con("Exp", 15);
             sprintf(cat,"FLOAT: %f",$1.fval);
-            add_child($$,node_con(cat,-1));
+            add_child($$,node_con(cat,-7));
         }
     | error {;}
     ;

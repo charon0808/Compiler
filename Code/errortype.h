@@ -29,6 +29,10 @@
 #define Exp 15
 #define Args 16
 
+#define TYPE_int 101
+#define TYPE_float 102
+#define TYPE_struct 103
+
 static const enum {
     undefined_var = 1,
     undefined_func,
@@ -59,13 +63,14 @@ extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
 extern char *strdup(const char *s);
 
-static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *);
+static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *, int);
 static int is_in_symbol_table(char *, int /* 0 for var table, 1 for fun*/);
 static void print_error(int, int, char *, char *);
 static void func(node *);
 static int find_exp_type(node *);
+static int find_var_type(node *);
 
-static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node)
+static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type)
 {
     symbol_list *start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
     while (start != NULL && start->next != NULL)
@@ -95,17 +100,18 @@ static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var 
     start->next = NULL;
     start->symbol_name = strdup(symbol_name);
     start->tree_node = _node;
+    start->type = type;
     return 1;
 }
 
-static int is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/)
+static int is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for func table */)
 {
     symbol_list *start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
     while (start != NULL)
     {
         // printf("in is_in_symbol_table, table_symbol:%s, symbol:%s\n", start->symbol_name, symbol_name);
         if (strcmp(start->symbol_name, symbol_name) == 0)
-            return 1;
+            return start->type;
         start = start->next;
     }
     return 0;
@@ -156,7 +162,15 @@ static void func(node *root)
                 print_error(redefined_var, child_id->lineno, child_id->code + 4, NULL);
             }
             else
-                add_in2_symbol_table(child_id->code, 0, child_id);
+            {
+                int type;
+                if ((type = find_var_type(root)) < 0)
+                {
+                    // TODO: error
+                }
+                else
+                    add_in2_symbol_table(child_id->code, 0, child_id, type);
+            }
         }
         break;
     }
@@ -173,7 +187,7 @@ static void func(node *root)
             print_error(redefined_func, child_id->lineno, child_id->code + 4, NULL);
         }
         else
-            add_in2_symbol_table(child_id->code, 1, child_id);
+            add_in2_symbol_table(child_id->code, 1, child_id, find_var_type(child_id));
         break;
     }
     case VarList:
@@ -206,7 +220,7 @@ static void func(node *root)
     }
     case Exp:
     {
-        int exp_type = find_exp_type(root);
+       // int exp_type = find_exp_type(root);
 
         /*
             Exp -> ID LP Args RP
@@ -221,9 +235,15 @@ static void func(node *root)
             child_id = root->children->next->next->c; // Exp -> Exp DOT ID
         if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && !is_in_symbol_table(child_id->code, 0))
             print_error(flag ? undefined_var : undefined_func, child_id->lineno, child_id->code + 4, NULL);
-
-        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP"))
+        /*
+            Exp -> Exp ASSIGNOP Exp
+        */
+        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP")==0)
         {
+            if (find_exp_type(root->children->c) != find_exp_type(root->children->next->next->c))
+            {
+                print_error(type_mismatch, root->lineno, NULL, NULL);
+            }
         }
         break;
     }
@@ -275,10 +295,112 @@ static void print_error(int error_no, int error_line, char *msg0, char *msg1)
     printf("\n");
 }
 
-static void find_exp_type(node *root) 
+static int find_exp_type(node *root)
 {
-    if (root->child_num == 3 && root->children->next->c->typeno == -3)
-    { // AND or OR
+    printf("Hah, child_num=%d\n", root->child_num);
+    print_tree(root,0);
+    /* INT:-1, FLOAT:-2 */
+    if (root->child_num == 3 && root->children->next->c->typeno == -2)
+    { // Exp ASSIGNOP Exp
+        printf("0\n");
+    }
+    else if (root->child_num == 3 && root->children->next->c->typeno == -3)
+    { // AND or OR or RELOP or NOT
+        printf("1\n");
+        return TYPE_int;
+    }
+    else if (root->child_num == 3 && root->children->next->c->typeno == -4)
+    { // PLUS or MINUS or STAR or DIV
+    
+        printf("2\n");
+        return find_exp_type(root->children->c);
+    }
+    else if (root->child_num == 3 && strcmp(root->children->c->code, "LP") == 0)
+    { // ( EXP )
+        printf("3\n");
+        return find_exp_type(root->children->next->c);
+    }
+    else if (root->child_num == 2 && strcmp(root->children->c->code, "MINUS") == 0)
+    { // MINUS EXP
+        printf("4\n");
+        return find_exp_type(root->children->next->c);
+    }
+    else if (root->child_num == 4 && strcmp(root->children->c->code, "Exp") == 0)
+    { // Exp [ Exp ] 数组
+        printf("5\n");
+        return find_exp_type(root->children->c);
+    }
+    else if (root->child_num == 3 && root->children->next->c->typeno == -5)
+    { // Exp DOT ID
+    
+        printf("6\n");
+        int type;
+        if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
+        {
+            // TODO: symbol not found error
+        }
+        else
+            return type;
+    }
+    else if (root->child_num == 1 && root->children->next->c->typeno == -6)
+    { // INT
+        printf("In find_exp_type INT\n");
+        return TYPE_int;
+    }
+    else if (root->child_num == 1 && root->children->next->c->typeno == -7)
+    { // FLOAT
+        printf("In find_exp_type FLOAT\n");
+        return TYPE_float;
+    }
+    else if (root->child_num == 1)
+    { // ID
+        printf("In find_exp_type ID\n");
+        int type;
+        if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
+        {
+            // TODO: symbol not found error
+        }
+        else
+            return type;
+    }
+    else if ((root->child_num == 3 || root->child_num == 4) && strstr(root->children->c->code, "ID") != NULL)
+    { // ID ( Args )  ID ( )  Func
+        printf("7\n");
+        int type;
+        if ((type = is_in_symbol_table(root->children->next->next->c->code, 1)) == 0)
+        {
+            // TODO: symbol not found error
+        }
+        else
+            return type;
+    }
+        printf("8\n");
+    return -1; // error
+}
+
+static int find_var_type(node *root)
+/* 变量定义时在语法树中确认变量类型 */
+{
+    while (root != NULL && (strcmp(root->code, "ParamDec") != 0 && strcmp(root->code, "ExtDef") != 0))
+        root = root->parent;
+    node *specifier_node = root->children->c;
+    if (specifier_node == NULL)
+        return -1; // error
+    if (strstr(specifier_node->children->c->code, "int") != NULL)
+    {
+        return TYPE_int; // INT
+    }
+    else if (strstr(specifier_node->children->c->code, "float") != NULL)
+    {
+        return TYPE_float; // FLOAT
+    }
+    else if (strcmp(specifier_node->children->c->code, "StructSpecifier"))
+    {
+        return TYPE_struct; // struct
+    }
+    else
+    {
+        return -2; // error
     }
 }
 

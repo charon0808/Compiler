@@ -9,6 +9,7 @@ typedef struct node
 {
     int level;
     child_node *children;
+    struct node* parent;
     int child_num;
     char *code;
     int lineno;
@@ -30,6 +31,7 @@ typedef struct symbol_list
     char *symbol_name;
     struct symbol_list *next;
     node* tree_node;
+    int type;
 } symbol_list;
 
 #define _BISON_A_H_

@@ -33,7 +33,8 @@ node *node_con(char *str, int tno)
     new_node->children = NULL;
     new_node->code = strdup(str);
     new_node->typeno = tno;
-    new_node->child_num=0;
+    new_node->child_num = 0;
+    new_node->parent = NULL;
     return new_node;
 }
 
@@ -53,6 +54,7 @@ void add_child(node *parent, node *child)
     }
     parent->child_num++;
     start->c = child;
+    child->parent = parent;
     start->next = NULL;
 }
 
