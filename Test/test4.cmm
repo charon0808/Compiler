@@ -10,5 +10,6 @@ int func()
 
 int main()
 {
-    j=1;
 }
+
+///* redefined func */

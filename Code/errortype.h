@@ -63,6 +63,7 @@ static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, nod
 static int is_in_symbol_table(char *, int /* 0 for var table, 1 for fun*/);
 static void print_error(int, int, char *, char *);
 static void func(node *);
+static int find_exp_type(node *);
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node)
 {
@@ -205,6 +206,8 @@ static void func(node *root)
     }
     case Exp:
     {
+        int exp_type = find_exp_type(root);
+
         /*
             Exp -> ID LP Args RP
                 | ID LP RP
@@ -212,11 +215,16 @@ static void func(node *root)
                 | ID
         */
         node *child_id = root->children->c;
+        int flag = root->child_num == 1 || strstr(child_id->code, "ID:") == NULL;
         // printf("In Exp, child_id_code: %s\n", child_id->code);
-        if (child_id->code != NULL && root->child_num>=3 && strstr(child_id->code, "ID:") == NULL)
+        if (child_id->code != NULL && root->child_num >= 3 && strstr(child_id->code, "ID:") == NULL)
             child_id = root->children->next->next->c; // Exp -> Exp DOT ID
         if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && !is_in_symbol_table(child_id->code, 0))
-            print_error(undefined_var, child_id->lineno, child_id->code + 4, NULL);
+            print_error(flag ? undefined_var : undefined_func, child_id->lineno, child_id->code + 4, NULL);
+
+        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP"))
+        {
+        }
         break;
     }
     case Args:
@@ -265,6 +273,13 @@ static void print_error(int error_no, int error_line, char *msg0, char *msg1)
     printf("Error type %d at Line %d: ", error_no, error_line);
     printf(error_str[error_no], msg0, msg1);
     printf("\n");
+}
+
+static void find_exp_type(node *root)
+{
+    if (root->child_num == 3 && root->children->next->c->typeno == -3)
+    { // AND or OR
+    }
 }
 
 #define _ERRORRYPE_H_

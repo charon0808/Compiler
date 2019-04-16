@@ -104,7 +104,7 @@ comments2        "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
 %%
 
 {comments1} {;}
-{comments2} {char a=' '; while(a==' '||a=='\r'||a=='\n') a=input(); char b=input(); if(a!='*'||b!='/'){unput(b); unput(a);}
+{comments2} {char a=' '; while(a==' '||a=='\r'||a=='\n') a=input(); char b=input(); if(a!='*'||b!='/'){unput(' '); unput(b); unput(a); unput(' ');}
             else {error=0; fprintf(stderr,"Error type B at line %d: Syntax error.\n",yylineno);}}
 {ws}        {;}
 {if}        {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return IF;}
@@ -134,7 +134,7 @@ comments2        "/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
 {while}     {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return WHILE;}
 {typeint}|{typefloat} {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return TYPE;}
 {id}        {strcpy(yylval.val.name,yytext); yylval.val.lineno=yylineno; return ID;}
-.           {fprintf(stderr, "Error type A at line %d: Mysterious character ‘%s’\n",yylineno,yytext); error=0;}
+.           {fprintf(stderr, "Error type A at line %d: Mysterious character '%s'\n",yylineno,yytext); error=0;}
 
 %%
 /*

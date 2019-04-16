@@ -325,19 +325,19 @@ Dec: VarDec {
 Exp: Exp ASSIGNOP Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("ASSIGNOP", -1));
+        add_child($$,node_con("ASSIGNOP", -2));
         add_child($$,$3);
     }
     | Exp AND Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("AND",-1));
+        add_child($$,node_con("AND",-3));
         add_child($$,$3);
     }
     | Exp OR Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
-        add_child($$,node_con("OR",-1));
+        add_child($$,node_con("OR",-3));
         add_child($$,$3);
     }
     | Exp RELOP Exp{
