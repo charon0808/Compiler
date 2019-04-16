@@ -275,7 +275,7 @@ static void print_error(int error_no, int error_line, char *msg0, char *msg1)
     printf("\n");
 }
 
-static void find_exp_type(node *root)
+static void find_exp_type(node *root) 
 {
     if (root->child_num == 3 && root->children->next->c->typeno == -3)
     { // AND or OR
