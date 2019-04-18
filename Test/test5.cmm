@@ -1,7 +1,7 @@
 int main()
 {
-    int i;
-    i = 3.7;
+    int i[3][1];
+    i[2][2] = 3.7*1;
 }
 
 ///* type mismatch */

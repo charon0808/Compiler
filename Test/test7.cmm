@@ -1,4 +1,9 @@
 int main()
- {
- float i = 1.05E-4;
- }
+{
+    float j;
+    int a;
+    struct{
+        int aa;
+    }aaa,bbb;
+    (a) + j;
+}

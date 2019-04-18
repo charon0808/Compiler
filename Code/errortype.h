@@ -7,6 +7,8 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
+//#define DEBUG
+
 #define Program 0
 #define ExtDefList 1
 #define ExtDef 2
@@ -69,6 +71,7 @@ static void print_error(int, int, char *, char *);
 static void func(node *);
 static int find_exp_type(node *);
 static int find_var_type(node *);
+static int is_left_value(node *);
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type)
 {
@@ -111,7 +114,12 @@ static int is_in_symbol_table(char *symbol_name, int which_table /* 0 for var ta
     {
         // printf("in is_in_symbol_table, table_symbol:%s, symbol:%s\n", start->symbol_name, symbol_name);
         if (strcmp(start->symbol_name, symbol_name) == 0)
+        {
+#ifdef DEBUG
+            printf("In is_in_symbol_table, symbol name:%s, type:%d\n", start->symbol_name, start->type);
+#endif
             return start->type;
+        }
         start = start->next;
     }
     return 0;
@@ -187,7 +195,7 @@ static void func(node *root)
             print_error(redefined_func, child_id->lineno, child_id->code + 4, NULL);
         }
         else
-            add_in2_symbol_table(child_id->code, 1, child_id, find_var_type(child_id));
+            add_in2_symbol_table(child_id->code, 1, child_id, find_var_type(root));
         break;
     }
     case VarList:
@@ -220,7 +228,7 @@ static void func(node *root)
     }
     case Exp:
     {
-       // int exp_type = find_exp_type(root);
+        // int exp_type = find_exp_type(root);
 
         /*
             Exp -> ID LP Args RP
@@ -238,11 +246,47 @@ static void func(node *root)
         /*
             Exp -> Exp ASSIGNOP Exp
         */
-        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP")==0)
+        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP") == 0)
         {
-            if (find_exp_type(root->children->c) != find_exp_type(root->children->next->next->c))
+            if (!is_left_value(root->children->c))
+                print_error(left_hand_must_var, root->lineno, NULL, NULL);
+            else
             {
-                print_error(type_mismatch, root->lineno, NULL, NULL);
+                int t1, t2;
+                if ((t1 = find_exp_type(root->children->c)) != (t2 = find_exp_type(root->children->next->next->c)))
+                    print_error(type_mismatch, root->lineno, NULL, NULL);
+#ifdef DEBUG
+                printf("t1=%d, t2=%d\n", t1, t2);
+#endif
+            }
+        }
+        else if (root->child_num == 3 && (strcmp(root->children->next->c->code, "PLUS") == 0 ||
+                                          strcmp(root->children->next->c->code, "MIBUS") == 0 ||
+                                          strcmp(root->children->next->c->code, "STAR") == 0 ||
+                                          strcmp(root->children->next->c->code, "DIV") == 0 ||
+                                          strcmp(root->children->next->c->code, "RELOP") == 0))
+        /* Exp PLUS/MINUS/STAR/DIV/RELOP Exp*/
+        {
+#ifdef DEBUG
+            int t1 = find_exp_type(root->children->c);
+            int t2 = find_exp_type(root->children->next->next->c);
+            printf("%s:%d, %s:%d\n", root->children->c->children->c->code, t1, root->children->next->next->c->children->c->code, t2);
+            if (t1 != t2)
+#endif
+#ifndef DEBUG
+                if (find_exp_type(root->children->c) != find_exp_type(root->children->next->next->c))
+#endif
+                {
+                    print_error(type_mismatch_operands, root->lineno, NULL, NULL);
+                }
+        }
+        else if (root->child_num == 3 && (strcmp(root->children->next->c->code, "AND") == 0 ||
+                                          strcmp(root->children->next->c->code, "OR") == 0))
+        /* Exp AND/OR Exp */
+        {
+            if (find_exp_type(root->children->c) != TYPE_int || find_exp_type(root->children->next->next->c) != TYPE)
+            {
+                print_error(type_mismatch_operands, root->lineno, NULL, NULL);
             }
         }
         break;
@@ -288,6 +332,25 @@ static void func(node *root)
     }
 }
 
+static int is_left_value(node *root)
+/*  判断左右值 */
+{
+    if (root->child_num == 3 && strcmp(root->children->c->code, "LP") == 0)
+    { // LP EXP RP
+        return 1 && is_left_value(root->children->next->c);
+    }
+    else if (root->child_num == 3 && strcmp(root->children->c->code, "DOT") == 0)
+    { // Exp DOT ID
+        return 1;
+    }
+    else if (root->child_num == 4 && strcmp(root->children->next->c->code, "LB") == 0)
+    { // Exp LB Exp RB
+        return 1;
+    }
+    else
+        return 0;
+}
+
 static void print_error(int error_no, int error_line, char *msg0, char *msg1)
 {
     printf("Error type %d at Line %d: ", error_no, error_line);
@@ -297,43 +360,39 @@ static void print_error(int error_no, int error_line, char *msg0, char *msg1)
 
 static int find_exp_type(node *root)
 {
+#ifdef DEBUG
     printf("Hah, child_num=%d\n", root->child_num);
-    print_tree(root,0);
+    print_tree(root, 0);
+#endif
     /* INT:-1, FLOAT:-2 */
     if (root->child_num == 3 && root->children->next->c->typeno == -2)
     { // Exp ASSIGNOP Exp
-        printf("0\n");
     }
     else if (root->child_num == 3 && root->children->next->c->typeno == -3)
     { // AND or OR or RELOP or NOT
-        printf("1\n");
         return TYPE_int;
     }
     else if (root->child_num == 3 && root->children->next->c->typeno == -4)
     { // PLUS or MINUS or STAR or DIV
-    
-        printf("2\n");
-        return find_exp_type(root->children->c);
+        if (find_exp_type(root->children->next->next->c) == TYPE_float || find_exp_type(root->children->c) == TYPE_float)
+            return TYPE_float;
+        else
+            return TYPE_int;
     }
     else if (root->child_num == 3 && strcmp(root->children->c->code, "LP") == 0)
     { // ( EXP )
-        printf("3\n");
         return find_exp_type(root->children->next->c);
     }
     else if (root->child_num == 2 && strcmp(root->children->c->code, "MINUS") == 0)
     { // MINUS EXP
-        printf("4\n");
         return find_exp_type(root->children->next->c);
     }
     else if (root->child_num == 4 && strcmp(root->children->c->code, "Exp") == 0)
     { // Exp [ Exp ] 数组
-        printf("5\n");
         return find_exp_type(root->children->c);
     }
     else if (root->child_num == 3 && root->children->next->c->typeno == -5)
     { // Exp DOT ID
-    
-        printf("6\n");
         int type;
         if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
         {
@@ -342,46 +401,45 @@ static int find_exp_type(node *root)
         else
             return type;
     }
-    else if (root->child_num == 1 && root->children->next->c->typeno == -6)
+    else if (root->child_num == 1 && root->children->c->typeno == -6)
     { // INT
-        printf("In find_exp_type INT\n");
         return TYPE_int;
     }
-    else if (root->child_num == 1 && root->children->next->c->typeno == -7)
+    else if (root->child_num == 1 && root->children->c->typeno == -7)
     { // FLOAT
-        printf("In find_exp_type FLOAT\n");
         return TYPE_float;
     }
     else if (root->child_num == 1)
     { // ID
-        printf("In find_exp_type ID\n");
         int type;
-        if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
+        if ((type = is_in_symbol_table(root->children->c->code, 0)) == 0)
         {
             // TODO: symbol not found error
+            return -1;
         }
         else
             return type;
     }
     else if ((root->child_num == 3 || root->child_num == 4) && strstr(root->children->c->code, "ID") != NULL)
-    { // ID ( Args )  ID ( )  Func
-        printf("7\n");
+    { // ID ( Args ) or ID ( )  Func
         int type;
-        if ((type = is_in_symbol_table(root->children->next->next->c->code, 1)) == 0)
+        if ((type = is_in_symbol_table(root->children->c->code, 1)) == 0)
         {
             // TODO: symbol not found error
         }
         else
             return type;
     }
-        printf("8\n");
     return -1; // error
 }
 
 static int find_var_type(node *root)
 /* 变量定义时在语法树中确认变量类型 */
 {
-    while (root != NULL && (strcmp(root->code, "ParamDec") != 0 && strcmp(root->code, "ExtDef") != 0))
+#ifdef DEBUG
+    printf("find var type for %s\n", root->code);
+#endif
+    while (root != NULL && (strcmp(root->code, "ParamDec") != 0 && strcmp(root->code, "ExtDef") != 0) && strcmp(root->code, "Def") != 0)
         root = root->parent;
     node *specifier_node = root->children->c;
     if (specifier_node == NULL)
@@ -394,7 +452,7 @@ static int find_var_type(node *root)
     {
         return TYPE_float; // FLOAT
     }
-    else if (strcmp(specifier_node->children->c->code, "StructSpecifier"))
+    else if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
     {
         return TYPE_struct; // struct
     }
@@ -404,6 +462,6 @@ static int find_var_type(node *root)
     }
 }
 
-#define _ERRORRYPE_H_
+#define _ERRORTYPE_H_
 
 #endif
