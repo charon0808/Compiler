@@ -10,6 +10,7 @@
 extern int yylineno;
 extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
+extern struct_typedef *_struct_symbol_table_start;
 extern int error;
 extern FILE *f;
 extern char *cat;

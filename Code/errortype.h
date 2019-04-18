@@ -63,66 +63,139 @@ static const char *error_str[] = {"error_str", "Undefined variable \"%s\".", "Un
 
 extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
+extern struct_typedef *_struct_typedef_table_start;
 extern char *strdup(const char *s);
+extern void print_tree(node *, int);
+
+static int struct_typedef_num = 1;
 
 static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *, int);
-static int is_in_symbol_table(char *, int /* 0 for var table, 1 for fun*/);
+static symbol_list *is_in_symbol_table(char *, int /* 0 for var table, 1 for fun*/);
 static void print_error(int, int, char *, char *);
 static void func(node *);
 static int find_exp_type(node *);
 static int find_var_type(node *);
 static int is_left_value(node *);
+static int add_struct_typedef(char *, node *);
+static int is_in_struct_typedef_table(char *);
+static void match_func_varlist(int *, node *);
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type)
 {
-    symbol_list *start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
-    while (start != NULL && start->next != NULL)
+#ifdef DEBUG
+    printf("In add_in2_symbol_table, symbol_name:%s, type=%d\n", symbol_name, type);
+#endif
+    symbol_list *_start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
+    while (_start != NULL && _start->next != NULL)
     {
-        if (strcmp(start->symbol_name, symbol_name) == 0)
+        if (strcmp(_start->symbol_name, symbol_name) == 0)
             return 0; // this ID already exists
-        start = start->next;
+        _start = _start->next;
     }
-    if (start == NULL)
+    if (_start == NULL)
     {
         if (which_table == 0)
         {
             _var_symbol_table_start = (symbol_list *)malloc(sizeof(symbol_list));
-            start = _var_symbol_table_start;
+            _start = _var_symbol_table_start;
         }
         else
         {
             _func_symbol_table_start = (symbol_list *)malloc(sizeof(symbol_list));
-            start = _func_symbol_table_start;
+            _start = _func_symbol_table_start;
         }
     }
     else
     {
-        start->next = (symbol_list *)malloc(sizeof(symbol_list));
-        start = start->next;
+        _start->next = (symbol_list *)malloc(sizeof(symbol_list));
+        _start = _start->next;
     }
-    start->next = NULL;
-    start->symbol_name = strdup(symbol_name);
-    start->tree_node = _node;
-    start->type = type;
+    _start->next = NULL;
+    _start->symbol_name = strdup(symbol_name);
+    _start->tree_node = _node;
+    _start->type = type;
+    memset(_start->varlist, 0xff, sizeof(_start->varlist));
     return 1;
 }
 
-static int is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for func table */)
+static symbol_list *is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for func table */)
 {
-    symbol_list *start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
-    while (start != NULL)
+    symbol_list *_start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
+    while (_start != NULL)
     {
-        // printf("in is_in_symbol_table, table_symbol:%s, symbol:%s\n", start->symbol_name, symbol_name);
-        if (strcmp(start->symbol_name, symbol_name) == 0)
+        // printf("in is_in_symbol_table, table_symbol:%s, symbol:%s\n", _start->symbol_name, symbol_name);
+        if (strcmp(_start->symbol_name, symbol_name) == 0)
         {
 #ifdef DEBUG
-            printf("In is_in_symbol_table, symbol name:%s, type:%d\n", start->symbol_name, start->type);
+            printf("In is_in_symbol_table, symbol name:%s, type:%d\n", _start->symbol_name, _start->type);
 #endif
-            return start->type;
+            return _start;
         }
-        start = start->next;
+        _start = _start->next;
     }
+    return NULL;
+}
+
+static int add_func_varlist(char *func_name, int type)
+{
+    symbol_list *_start = _func_symbol_table_start;
+    while (_start != NULL)
+    {
+        if (strcmp(_start->symbol_name, func_name) == 0)
+        {
+            break;
+        }
+        _start = _start->next;
+    }
+    if (_start == NULL)
+    {
+        // func name not found error
+        return -1;
+    }
+    int i;
+    for (i = 0; i < 32 && _start->varlist[i] != -1; i++)
+        ;
+    _start->varlist[i] = type;
     return 0;
+}
+
+static int add_struct_typedef(char *struct_name, node *root)
+{
+#ifdef DEBUG
+    printf("In add_struct_typedef, struct_name=%s\n", struct_name);
+#endif
+    struct_typedef *_start = _struct_typedef_table_start;
+    while (_start != NULL && _start->next != NULL)
+    {
+        if (strcmp(struct_name, _start->symbol_name) == 0)
+            return -1; // already exists error
+        _start = _start->next;
+    }
+    if (_start == NULL)
+    {
+        _struct_typedef_table_start = (struct_typedef *)malloc(sizeof(struct_typedef));
+        _start = _struct_typedef_table_start;
+    }
+    else
+    {
+        _start->next = (struct_typedef *)malloc(sizeof(struct_typedef));
+        _start = _start->next;
+    }
+    _start->symbol_name = strdup(struct_name);
+    struct_typedef_num++;
+    return TYPE_struct + struct_typedef_num - 1;
+}
+
+static int is_in_struct_typedef_table(char *struct_name)
+{
+    struct_typedef *_start = _struct_typedef_table_start;
+    for (int i = 0; _start != NULL; i++)
+    {
+        if (strcmp(_start->symbol_name, struct_name) != 0)
+            return TYPE_struct + i;
+        _start = _start->next;
+    }
+    return -1; // not found error
 }
 
 static void func(node *root)
@@ -152,6 +225,33 @@ static void func(node *root)
     }
     case StructSpecifier:
     {
+        if (root->child_num == 5)
+        { // StructSpecifier -> STRUCT OptTag LC DefList RC
+            node *opttag_node = root->children->next->c;
+            if (strstr(opttag_node->children->c->code, "ID") != NULL)
+            { // OptTag -> ID
+                int type;
+                if ((type = add_struct_typedef(opttag_node->children->c->code + 4, opttag_node->children->c)) < 0)
+                {
+                    // TODO: error
+                }
+                root->struct_type = type;
+            }
+            else
+            { // OptTag -> empty
+                char *_tmp = (char *)malloc(16);
+                sprintf(_tmp, "$%d", struct_typedef_num);
+                int type;
+                if ((type = add_struct_typedef(_tmp, opttag_node->children->c)) < 0)
+                {
+                    // TODO: error
+                }
+                root->struct_type = type;
+#ifdef DEBUG
+                printf("In StructSpecifier, struct name:%s, type=%d\n", _tmp, type);
+#endif
+            }
+        }
         break;
     }
     case VarDec:
@@ -163,8 +263,10 @@ static void func(node *root)
                 varDec -> ID
             */
             node *child_id = root->children->c;
-            // printf("in VarDec, child_id:%s\n", child_id->code);
-            if (is_in_symbol_table(child_id->code, 0))
+#ifdef DEBUG
+            printf("in VarDec, child_id:%s\n", child_id->code);
+#endif
+            if (is_in_symbol_table(child_id->code + 4, 0) != NULL)
             {
                 // TODO: var already exists error
                 print_error(redefined_var, child_id->lineno, child_id->code + 4, NULL);
@@ -177,7 +279,7 @@ static void func(node *root)
                     // TODO: error
                 }
                 else
-                    add_in2_symbol_table(child_id->code, 0, child_id, type);
+                    add_in2_symbol_table(child_id->code + 4, 0, child_id, type);
             }
         }
         break;
@@ -189,17 +291,21 @@ static void func(node *root)
                     | ID LP RP
         */
         node *child_id = root->children->c;
-        if (is_in_symbol_table(child_id->code, 1))
+        if (is_in_symbol_table(child_id->code + 4, 1) != NULL)
         {
             // TODO: func already exists error
             print_error(redefined_func, child_id->lineno, child_id->code + 4, NULL);
         }
         else
-            add_in2_symbol_table(child_id->code, 1, child_id, find_var_type(root));
+            add_in2_symbol_table(child_id->code + 4, 1, child_id, find_var_type(root));
         break;
     }
     case VarList:
     {
+        char *func_name = root->parent->children->c->code + 4;
+        // VarList -> ParamDec COMMA VarList
+        // VarList -> ParamDec
+        add_func_varlist(func_name, find_var_type(root->children->c));
         break;
     }
     case ParamDec:
@@ -220,6 +326,14 @@ static void func(node *root)
     }
     case Stmt:
     {
+        if (root->child_num == 3)
+        { // Stmt -> RETURN Exp SEMI
+            int t1, t2;
+            if ((t1 = find_exp_type(root->children->next->c)) != (t2 = find_var_type(root)))
+            {
+                print_error(type_mismatch_return, root->children->c->lineno, NULL, NULL);
+            }
+        }
         break;
     }
     case Def:
@@ -240,7 +354,7 @@ static void func(node *root)
         int flag = root->child_num == 1 || strstr(child_id->code, "ID:") == NULL;
         if (child_id->code != NULL && root->child_num >= 3 && strstr(child_id->code, "ID:") == NULL)
             child_id = root->children->next->next->c; // Exp -> Exp DOT ID
-        if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && !is_in_symbol_table(child_id->code, 0))
+        if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && is_in_symbol_table(child_id->code + 4, flag ? 0 : 1) == NULL)
             print_error(flag ? undefined_var : undefined_func, child_id->lineno, child_id->code + 4, NULL);
         /*
             Exp -> Exp ASSIGNOP Exp
@@ -288,6 +402,22 @@ static void func(node *root)
                 print_error(type_mismatch_operands, root->lineno, NULL, NULL);
             }
         }
+        else if (root->child_num >= 3 && strcmp(root->children->next->c->code, "LP") == 0)
+        /* Exp -> ID LP Args RP
+               |  ID LP RP */
+        {
+            int symbol_type[32];
+            match_func_varlist(symbol_type, root->children->next->next->c);
+            symbol_list *symbol_func = is_in_symbol_table(root->children->c->code, 1);
+            if (symbol_func == NULL)
+            {
+                // TODO: func not found error
+            }
+            else
+            {
+                
+            }
+        }
         break;
     }
     case Args:
@@ -308,7 +438,7 @@ static void func(node *root)
         */
         node *child_id = root->children->c;
         if (strcmp(child_id->code, "\"empty\"") != 0)
-            if (!is_in_symbol_table(child_id->code, 0))
+            if (is_in_symbol_table(child_id->code + 4, 0) == NULL)
                 print_error(undefined_var, child_id->lineno, child_id->code + 4, NULL);
         break;
     }
@@ -321,12 +451,12 @@ static void func(node *root)
     }
     if (root->children != NULL)
     {
-        child_node *start = root->children;
-        while (start != NULL)
+        child_node *_start = root->children;
+        while (_start != NULL)
         {
-            if (start->c->children != NULL)
-                func(start->c);
-            start = start->next;
+            if (_start->c->children != NULL)
+                func(_start->c);
+            _start = _start->next;
         }
     }
 }
@@ -334,7 +464,7 @@ static void func(node *root)
 static int is_left_value(node *root)
 /*  判断左右值 */
 {
-    if (root->child_num == 1 && strstr(root->children->c->code, "ID") !=NULL)
+    if (root->child_num == 1 && strstr(root->children->c->code, "ID") != NULL)
     {
         return 1;
     }
@@ -400,13 +530,14 @@ static int find_exp_type(node *root)
     else if (root->child_num == 3 && root->children->next->c->typeno == -5)
     { // Exp DOT ID
         int type;
-        if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
+        symbol_list *sl = is_in_symbol_table(root->children->next->next->c->code + 4, 0);
+        if (sl == NULL)
         {
             // TODO: symbol not found error
             return -1;
         }
         else
-            return type;
+            return sl->type;
     }
     else if (root->child_num == 1 && root->children->c->typeno == -6)
     { // INT
@@ -419,23 +550,25 @@ static int find_exp_type(node *root)
     else if (root->child_num == 1)
     { // ID
         int type;
-        if ((type = is_in_symbol_table(root->children->c->code, 0)) == 0)
+        symbol_list *sl = is_in_symbol_table(root->children->c->code + 4, 0);
+        if (sl == NULL)
         {
             // TODO: symbol not found error
             return -1;
         }
         else
-            return type;
+            return sl->type;
     }
     else if ((root->child_num == 3 || root->child_num == 4) && strstr(root->children->c->code, "ID") != NULL)
     { // ID ( Args ) or ID ( )  Func
         int type;
-        if ((type = is_in_symbol_table(root->children->c->code, 1)) == 0)
+        symbol_list *sl = is_in_symbol_table(root->children->c->code + 4, 1);
+        if (sl == NULL)
         {
             // TODO: symbol not found error
         }
         else
-            return type;
+            return sl.type;
     }
     return -1; // error
 }
@@ -461,11 +594,30 @@ static int find_var_type(node *root)
     }
     else if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
     {
-        return TYPE_struct; // struct
+#ifdef DEBUG
+        printf("In find_var_type, StuctSpecifier, struct_type:%d\n", specifier_node->children->c->struct_type);
+#endif
+        return specifier_node->children->c->struct_type;
     }
     else
     {
         return -2; // error
+    }
+}
+
+static void match_func_varlist(int *symbol_type, node *args_node)
+{
+    if (args_node == NULL)
+    { // means no args
+        *symbol_type = 0;
+    }
+    *symbol_type = find_exp_type(args_node->children->c);
+    if (args_node->child_num == 3)
+    { // Args -> Exp COMMA Args
+        match_func_varlist(symbol_type + 1, args_node->children->next->next->c);
+    }
+    else if (args_node->child_num == 1)
+    { // Args -> Exp
     }
 }
 

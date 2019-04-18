@@ -2,6 +2,7 @@
     "files.associations": {
         "stdio.h": "c",
         "stdlib.h": "c",
-        "*.cmm": "c"
+        "*.cmm": "c",
+        "*.y": "cpp"
     }
 }

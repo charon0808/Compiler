@@ -12,6 +12,8 @@
     symbol_list* _var_symbol_table_start=NULL;
     symbol_list* _func_symbol_table_start=NULL;
 
+    struct_typedef *_struct_typedef_table_start=NULL;
+
     void bison_error(const char*);
     
     node* node_con(char*, int);

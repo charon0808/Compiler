@@ -1,8 +1,5 @@
 int main()
- {
- // line comment
- /*
- block comment
- */
- int i = 1;
- }
+{
+    float j = 1.7;
+    return j;
+}

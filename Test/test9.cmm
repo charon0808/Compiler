@@ -1,10 +1,8 @@
+int func(int i)
+{
+    return i;
+}
 int main()
- {
- /*
- comment
- /*
- nested comment
- */
- */
- int i = 1;
- }
+{
+    func(1, 2);
+}
