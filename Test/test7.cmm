@@ -5,5 +5,5 @@ int main()
     struct{
         int aa;
     }aaa,bbb;
-    (a) + j;
+    aaa.aa=11;
 }

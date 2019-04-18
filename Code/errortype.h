@@ -238,7 +238,6 @@ static void func(node *root)
         */
         node *child_id = root->children->c;
         int flag = root->child_num == 1 || strstr(child_id->code, "ID:") == NULL;
-        // printf("In Exp, child_id_code: %s\n", child_id->code);
         if (child_id->code != NULL && root->child_num >= 3 && strstr(child_id->code, "ID:") == NULL)
             child_id = root->children->next->next->c; // Exp -> Exp DOT ID
         if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && !is_in_symbol_table(child_id->code, 0))
@@ -335,12 +334,19 @@ static void func(node *root)
 static int is_left_value(node *root)
 /*  判断左右值 */
 {
-    if (root->child_num == 3 && strcmp(root->children->c->code, "LP") == 0)
+    if (root->child_num == 1 && strstr(root->children->c->code, "ID") !=NULL)
+    {
+        return 1;
+    }
+    else if (root->child_num == 3 && strcmp(root->children->c->code, "LP") == 0)
     { // LP EXP RP
         return 1 && is_left_value(root->children->next->c);
     }
-    else if (root->child_num == 3 && strcmp(root->children->c->code, "DOT") == 0)
+    else if (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0)
     { // Exp DOT ID
+#ifdef DEBUG
+        printf("In is_left_value, Exp DOT ID, %s\n", root->children->next->next->c->code);
+#endif
         return 1;
     }
     else if (root->child_num == 4 && strcmp(root->children->next->c->code, "LB") == 0)
@@ -397,6 +403,7 @@ static int find_exp_type(node *root)
         if ((type = is_in_symbol_table(root->children->next->next->c->code, 0)) == 0)
         {
             // TODO: symbol not found error
+            return -1;
         }
         else
             return type;
