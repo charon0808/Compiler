@@ -83,6 +83,8 @@ static char *find_symbol_type_name(int);
 static char *find_exp_id_name(node *);
 static int find_exp_arr_dimension(node *);
 static char *find_exp_code(node *, char *);
+static struct_typedef *find_struct(char *);
+static struct_typedef *find_struct_by_id(int);
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension)
 {
@@ -241,6 +243,9 @@ static void func(node *root)
                     // TODO: error
                 }
                 root->struct_type = type;
+#ifdef DEBUG
+                printf("In StructSpecifier, struct name:%s, type=%d\n", root->children->next->c->children->c->code, type);
+#endif
             }
             else
             { // OptTag -> empty
@@ -256,6 +261,10 @@ static void func(node *root)
                 printf("In StructSpecifier, struct name:%s, type=%d\n", _tmp, type);
 #endif
             }
+        }
+        else if (root->child_num == 2)
+        { // StructSpecifier -> STRUCT Tag
+            root->struct_type = is_in_struct_typedef_table(root->children->next->c->children->c->code + 4);
         }
         break;
     }
@@ -332,6 +341,9 @@ static void func(node *root)
     }
     case DefList:
     {
+        if (strcmp(root->parent->code,"DefList")==0)
+            break;
+        int struct_type=root->parent->struct_type;
         break;
     }
     case StmtList:
@@ -358,22 +370,25 @@ static void func(node *root)
     {
         // int exp_type = find_exp_type(root);
 
+        if (strstr(root->children->c->code, "ID") != NULL || (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0))
         /*
             Exp -> ID LP Args RP
                 | ID LP RP
                 | Exp DOT ID
                 | ID
         */
-        node *child_id = root->children->c;
-        int flag = root->child_num == 1 || strstr(child_id->code, "ID:") == NULL;
-        if (child_id->code != NULL && root->child_num >= 3 && strstr(child_id->code, "ID:") == NULL)
-            child_id = root->children->next->next->c; // Exp -> Exp DOT ID
-        if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && is_in_symbol_table(child_id->code + 4, 0) == NULL && is_in_symbol_table(child_id->code + 4, 1) == NULL)
-            print_error(flag ? undefined_var : undefined_func, child_id->lineno, child_id->code + 4, NULL);
+        {
+            node *child_id = root->children->c;
+            int flag = root->child_num == 1 || strstr(child_id->code, "ID:") == NULL;
+            if (child_id->code != NULL && root->child_num >= 3 && strstr(child_id->code, "ID:") == NULL)
+                child_id = root->children->next->next->c; // Exp -> Exp DOT ID
+            if (child_id->code != NULL && strstr(child_id->code, "ID:") != NULL && is_in_symbol_table(child_id->code + 4, 0) == NULL && is_in_symbol_table(child_id->code + 4, 1) == NULL)
+                print_error(flag ? undefined_var : undefined_func, child_id->lineno, child_id->code + 4, NULL);
+        }
+        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP") == 0)
         /*
             Exp -> Exp ASSIGNOP Exp
         */
-        else if (root->child_num == 3 && strcmp(root->children->next->c->code, "ASSIGNOP") == 0)
         {
             if (!is_left_value(root->children->c))
                 print_error(left_hand_must_var, root->lineno, NULL, NULL);
@@ -414,6 +429,28 @@ static void func(node *root)
             if (find_exp_type(root->children->c) != TYPE_int || find_exp_type(root->children->next->next->c) != TYPE)
             {
                 print_error(type_mismatch_operands, root->lineno, NULL, NULL);
+            }
+        }
+        else if (root->child_num == 4 && strcmp(root->children->next->c->code, "LB") == 0)
+        { // Exp -> Exp LB Exp RB
+            if (find_exp_type(root->children->next->next->c) != TYPE_int)
+            {
+                char *str = (char *)malloc(512 * sizeof(char));
+                str[0] = '\0';
+                find_exp_code(root->children->next->next->c, str);
+                print_error(not_an_integer, root->lineno, str, NULL);
+                free(str);
+            }
+            if (root->parent->parent->child_num >= 2 && strcmp(root->parent->parent->children->next->c->code, "LB") == 0)
+                break;
+#ifdef DEBUG
+            printf("Exp -> Exp LB Exp RB");
+#endif
+            char *id_name = find_exp_id_name(root);
+            symbol_list *sl = is_in_symbol_table(id_name, 0);
+            if (sl->dimension == 0 && find_exp_arr_dimension(root) != 0)
+            {
+                print_error(var_not_an_array, root->lineno, id_name, NULL);
             }
         }
         if (root->child_num >= 3 && strcmp(root->children->next->c->code, "LP") == 0)
@@ -461,27 +498,11 @@ static void func(node *root)
                 }
             }
         }
-        else if (root->child_num == 4 && strcmp(root->children->next->c->code, "LB") == 0)
-        { // Exp -> Exp LB Exp RB
-            if (find_exp_type(root->children->next->next->c) != TYPE_int)
-            {
-                char *str = (char *)malloc(512 * sizeof(char));
-                str[0] = '\0';
-                find_exp_code(root->children->next->next->c, str);
-                print_error(not_an_integer, root->lineno, str, NULL);
-                free(str);
-            }
-            if (root->parent->parent->child_num >= 2 && strcmp(root->parent->parent->children->next->c->code, "LB") == 0)
-                break;
-#ifdef DEBUG
-            printf("Exp -> Exp LB Exp RB");
-#endif
-            char *id_name = find_exp_id_name(root);
-            symbol_list *sl = is_in_symbol_table(id_name, 0);
-            if (sl->dimension == 0 && find_exp_arr_dimension(root) != 0)
-            {
-                print_error(var_not_an_array, root->lineno, id_name, NULL);
-            }
+        if (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0)
+        /* Exp -> Exp DOT ID */
+        {
+            if (find_exp_type(root->children->c) < TYPE_struct)
+                print_error(illegal_use_of_dot, root->lineno, NULL, NULL);
         }
         break;
     }
@@ -499,8 +520,9 @@ static void func(node *root)
             Tag -> ID
         */
         node *child_id = root->children->c;
-        if (strcmp(child_id->code, "\"empty\"") != 0){
-            int ss=is_in_struct_typedef_table(root->children->c->code + 4);
+        if (strcmp(child_id->code, "\"empty\"") != 0)
+        {
+            int ss = is_in_struct_typedef_table(root->children->c->code + 4);
             if (ss == -1)
                 print_error(undefined_struct, child_id->lineno, child_id->code + 4, NULL);
         }
@@ -663,7 +685,7 @@ static int find_var_type(node *root)
     else if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
     {
 #ifdef DEBUG
-        printf("In find_var_type, StuctSpecifier, struct_type:%d\n", specifier_node->children->c->struct_type);
+        printf("In find_var_type, StructSpecifier, struct_type:%d\n", specifier_node->children->c->struct_type);
 #endif
         return specifier_node->children->c->struct_type;
     }
@@ -761,6 +783,32 @@ static char *find_exp_code(node *root, char *str)
     }
     else
         strcat(str, strstr(root->code, "FLOAT") != NULL ? root->code + 7 : root->code + 4);
+}
+
+static struct_typedef *find_struct(char *struct_name)
+{
+    struct_typedef *_start = _struct_symbol_table_start;
+    while (_start != NULL)
+    {
+        if (strcmp(_start->symbol_name, struct_name) == 0)
+            return _start;
+        _start = _start->next;
+    }
+    return NULL;
+}
+
+static struct_typedef *find_struct_by_id(int struct_id)
+{
+    struct_typedef *_start = _struct_symbol_table_start;
+    int times=struct_id-TYPE_struct-1;
+    while(_start!=NULL&&times)
+    {
+        _start=_start->next;
+    if (_start==NULL)
+        return -1;
+        times--;
+    }
+    return _start;
 }
 
 #define _ERRORTYPE_H_

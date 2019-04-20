@@ -37,17 +37,18 @@ typedef struct symbol_list
     int dimension;
 } symbol_list;
 
-typedef struct n_list
+typedef struct field_list
 {
     char *symbol_name;
+    int type;
     struct name_list *next;
-} n_list;
+} field_list;
 
 typedef struct struct_typedef
 {
     char *symbol_name;
     struct struct_typedef *next;
-    n_list *name_list;
+    field_list *name_list;
 } struct_typedef;
 
 #define _BISON_A_H_
