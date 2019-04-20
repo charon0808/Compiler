@@ -1,0 +1,9 @@
+int main()
+ {
+     struct a{
+         int aa;
+     }b;
+     struct aaaa aaa;
+ int i[10];
+ i[aaa] = 10;
+ }

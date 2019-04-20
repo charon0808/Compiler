@@ -1,5 +1,9 @@
+struct {
+    int hah;
+}test;
+
 int main()
  {
- int i;
- i[0];
+ float i;
+ test.hah[2]=1;
  }
