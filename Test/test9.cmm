@@ -2,7 +2,12 @@ int func(int i)
 {
     return i;
 }
+
+    struct hah{
+        int aaa;
+    }aaaa;
 int main()
 {
-    func(1, 2);
+    float a;
+    func(1, aaaa);
 }

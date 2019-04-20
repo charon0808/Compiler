@@ -34,6 +34,7 @@ typedef struct symbol_list
     node *tree_node;
     int type;
     int varlist[32];
+    int dimension;
 } symbol_list;
 
 typedef struct n_list
