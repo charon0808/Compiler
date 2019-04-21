@@ -7,7 +7,7 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
-#define DEBUG
+//#define DEBUG
 
 #define Program 0
 #define ExtDefList 1
@@ -201,7 +201,7 @@ static int is_in_struct_typedef_table(char *struct_name)
     for (int i = 0; _start != NULL; i++)
     {
         if (strcmp(_start->symbol_name, struct_name) == 0)
-            return TYPE_struct + i;
+            return TYPE_struct + i + 1;
         _start = _start->next;
     }
     return -1; // not found error
@@ -209,7 +209,9 @@ static int is_in_struct_typedef_table(char *struct_name)
 
 static void func(node *root)
 {
-    // printf("node: %s, node_type_no: %d\n",root->code,root->typeno);
+#ifdef DEBUG
+    printf("node: %s, node_type_no: %d\n", root->code, root->typeno);
+#endif
     switch (root->typeno)
     {
     case Program:
@@ -297,6 +299,10 @@ static void func(node *root)
 #ifdef DEBUG
                 printf("in varDec -> ID, struct_name:%s, type=%d\n", st->symbol_name, struct_type);
 #endif
+                if (is_in_struct_field(root->children->c->code, st))
+                {
+                    print_error(redefined_field, root->lineno, root->children->c->code + 4, NULL);
+                }
                 add_struct_fields(root->children->c->code, struct_type, st);
             }
         }
@@ -312,7 +318,7 @@ static void func(node *root)
 #ifdef DEBUG
             printf("in VarDec, child_id:%s\n", child_id->code);
 #endif
-            if (is_in_symbol_table(child_id->code + 4, 0) != NULL)
+            if (!is_in_struct_field && is_in_symbol_table(child_id->code + 4, 0) != NULL)
             {
                 // TODO: var already exists error
                 print_error(redefined_var, child_id->lineno, child_id->code + 4, NULL);
@@ -408,11 +414,11 @@ static void func(node *root)
     {
         // int exp_type = find_exp_type(root);
 
-        if (strstr(root->children->c->code, "ID") != NULL || (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0))
+        if (strstr(root->children->c->code, "ID") != NULL) //|| (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0))
         /*
             Exp -> ID LP Args RP
                 | ID LP RP
-                | Exp DOT ID
+                // | Exp DOT ID
                 | ID
         */
         {
@@ -542,11 +548,13 @@ static void func(node *root)
             int type;
             if ((type = find_exp_type(root->children->c)) < TYPE_struct)
                 print_error(illegal_use_of_dot, root->lineno, NULL, NULL);
+#ifdef DEBUG
             printf("int Exp DOT ID, type=%d\n", type);
+#endif
             struct_typedef *st = find_struct_by_id(type);
             if (!is_in_struct_field(root->children->next->next->c->code, st))
             {
-                print_error(not_exist_field, root->lineno, root->children->next->next->c->code, NULL);
+                print_error(not_exist_field, root->lineno, root->children->next->next->c->code + 4, NULL);
             }
         }
         break;
@@ -571,8 +579,6 @@ static void func(node *root)
             if (ss == -1)
                 print_error(undefined_struct, child_id->lineno, child_id->code + 4, NULL);
         }
-        struct_typedef *st=find_struct(root->children->c->code);
-        root->parent->struct_type=is_in_struct_typedef_table(st->symbol_name);
         break;
     }
     case OptTag:
@@ -716,9 +722,7 @@ static int find_exp_type(node *root)
 static int find_var_type(node *root)
 /* 变量定义时在语法树中确认变量类型 */
 {
-#ifdef DEBUG
-    printf("find var type for %s\n", root->children->c->code);
-#endif
+    node *_root = root;
     while (root != NULL && (strcmp(root->code, "ParamDec") != 0 && strcmp(root->code, "ExtDef") != 0) && strcmp(root->code, "Def") != 0)
         root = root->parent;
     node *specifier_node = root->children->c;
@@ -726,17 +730,32 @@ static int find_var_type(node *root)
         return -1; // error
     if (strstr(specifier_node->children->c->code, "int") != NULL)
     {
+#ifdef DEBUG
+        printf("INT: find var type for %s\n", _root->children->c->code);
+#endif
         return TYPE_int; // INT
     }
     else if (strstr(specifier_node->children->c->code, "float") != NULL)
     {
+#ifdef DEBUG
+        printf("FLOAT: find var type for %s\n", _root->children->c->code);
+#endif
         return TYPE_float; // FLOAT
     }
     else if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
     {
 #ifdef DEBUG
-        printf("In find_var_type, StructSpecifier, struct_type:%d\n", specifier_node->children->c->struct_type);
+        printf("STRUCT: find var type for %s\n", _root->children->c->code);
 #endif
+        int type;
+        if (specifier_node->children->c->child_num == 2)
+        { // StructSpecifier -> Struct Tag
+            type = is_in_struct_typedef_table(specifier_node->children->c->children->next->c->children->c->code + 4);
+        }
+#ifdef DEBUG
+        printf("In find_var_type, StructSpecifier struct:%s, struct_type:%d\n", specifier_node->children->c->children->next->c->children->c->code, type);
+#endif
+        return type;
         return specifier_node->children->c->struct_type;
     }
     else
