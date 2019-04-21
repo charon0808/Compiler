@@ -41,7 +41,7 @@ typedef struct field_list
 {
     char *symbol_name;
     int type;
-    struct name_list *next;
+    struct field_list *next;
 } field_list;
 
 typedef struct struct_typedef
