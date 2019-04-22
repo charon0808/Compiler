@@ -49,6 +49,7 @@ typedef struct struct_typedef
     char *symbol_name;
     struct struct_typedef *next;
     field_list *name_list;
+    int id;
 } struct_typedef;
 
 #define _BISON_A_H_

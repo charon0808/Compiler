@@ -6,4 +6,5 @@ struct Position
 
 int main()
 {
+    int x;
 }

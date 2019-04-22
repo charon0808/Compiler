@@ -1,7 +1,15 @@
+struct a{
+    int x;
+};
+
+struct b{
+    int x;
+};
+
 int main()
 {
     int i, j;
-    int i;
+    //int i;
 }
 
 ///* redefined var */
