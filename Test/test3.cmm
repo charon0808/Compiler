@@ -9,7 +9,7 @@ struct b{
 int main()
 {
     int i, j;
-    //int i;
+    int i;
 }
 
 ///* redefined var */

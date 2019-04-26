@@ -91,9 +91,9 @@ static int is_field_in_struct(char *, int);
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension)
 {
-#ifdef DEBUG
-    printf("In add_in2_symbol_table, symbol_name:%s, type=%d\n", symbol_name, type);
-#endif
+    //#ifdef DEBUG
+    //printf("In add_in2_symbol_table, symbol_name:%s, type=%d\n", symbol_name, type);
+    //#endif
     symbol_list *_start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
     while (_start != NULL && _start->next != NULL)
     {
@@ -172,13 +172,13 @@ static int add_func_varlist(char *func_name, int type)
 
 static int add_struct_typedef(char *struct_name, node *root)
 {
-#ifdef DEBUG
-    printf("In add_struct_typedef, struct_name=%s\n", struct_name);
-#endif
+    //#ifdef DEBUG
+    //printf("In add_struct_typedef, struct_name=%s\n", struct_name);
+    //#endif
     struct_typedef *_start = _struct_typedef_table_start;
     while (_start != NULL && _start->next != NULL)
     {
-        //printf("In add_struct_typedef, struct_name=%s, _start->symbol_name=%s\n", struct_name, _start->symbol_name);
+        printf("In add_struct_typedef, struct_name=%s, _start->symbol_name=%s\n", struct_name, _start->symbol_name);
         if (strcmp(struct_name, _start->symbol_name) == 0)
             return -1; // already exists error
         _start = _start->next;
@@ -286,6 +286,7 @@ static void func(node *root)
     {
         int is_in_struct_fields_flag = 0;
         int struct_type;
+        int is_redeffield_not_redefvar = 0;
         if (root->child_num == 1)
         {
             /*
@@ -317,6 +318,7 @@ static void func(node *root)
                 if (is_in_struct_field(root->children->c->code, st))
                 {
                     print_error(redefined_field, root->lineno, root->children->c->code + 4, NULL);
+                    is_redeffield_not_redefvar = 1;
                 }
                 add_struct_fields(root->children->c->code, struct_type, st);
             }
@@ -338,7 +340,7 @@ static void func(node *root)
                 // TODO: var already exists error
                 print_error(redefined_var, child_id->lineno, child_id->code + 4, NULL);
             }
-            if (is_in_struct_fields_flag && !is_in_struct_field(root->children->c->code + 4, find_struct_by_id(struct_type)) && is_in_symbol_table(child_id->code + 4, 0) != NULL)
+            else if (is_in_struct_fields_flag && !is_redeffield_not_redefvar && is_in_symbol_table(child_id->code + 4, 0) != NULL)
             {
                 print_error(redefined_var, child_id->lineno, child_id->code + 4, NULL);
             }
@@ -346,7 +348,7 @@ static void func(node *root)
             {
                 int type = 0;
                 node *tmp = root;
-                while (tmp != NULL && strcmp(tmp->code, "Def") != 0)
+                while (tmp != NULL && (strcmp(tmp->code, "Def") != 0 && strcmp(tmp->code, "ExtDef") != 0))
                 {
                     tmp = tmp->parent;
                 }
@@ -583,9 +585,9 @@ static void func(node *root)
             int type;
             if ((type = find_exp_type(root->children->c)) < TYPE_struct)
                 print_error(illegal_use_of_dot, root->lineno, NULL, NULL);
-//#ifdef DEBUG
-            printf("int Exp DOT ID, %s.type=%d\n",root->children->c->code, type);
-//#endif
+            //#ifdef DEBUG
+            //printf("int Exp DOT ID, %s.type=%d\n", root->children->c->code, type);
+            //#endif
             struct_typedef *st = find_struct_by_id(type);
             if (!is_in_struct_field(root->children->next->next->c->code, st))
             {
@@ -733,7 +735,7 @@ static int find_exp_type(node *root)
     { // ID
         int type;
         symbol_list *sl = is_in_symbol_table(root->children->c->code + 4, 0);
-        printf("%s.type:%d",sl->symbol_name,sl->type);
+        //printf("%s.type:%d", sl->symbol_name, sl->type);
         if (sl == NULL)
         {
             // TODO: symbol not found error
@@ -957,8 +959,10 @@ static int is_in_struct_field(char *name, struct_typedef *struct_node)
     field_list *_start = struct_node->name_list;
     while (_start != NULL)
     {
+        //printf("in is_in_struct_field, _start->symbol_name: %s, name: %s\n", _start->symbol_name + 4, name);
         if (strcmp(_start->symbol_name, name) == 0)
         {
+            printf("\n\n");
             return 1;
         }
         _start = _start->next;
