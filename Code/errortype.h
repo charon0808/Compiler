@@ -172,9 +172,9 @@ static int add_func_varlist(char *func_name, int type)
 
 static int add_struct_typedef(char *struct_name, node *root)
 {
-    //#ifdef DEBUG
-    //printf("In add_struct_typedef, struct_name=%s\n", struct_name);
-    //#endif
+#ifdef DEBUG
+    printf("In add_struct_typedef, struct_name=%s\n", struct_name);
+#endif
     struct_typedef *_start = _struct_typedef_table_start;
     while (_start != NULL && _start->next != NULL)
     {
@@ -344,8 +344,20 @@ static void func(node *root)
             }
             else
             {
-                int type;
-                if ((type = find_var_type(root)) < 0)
+                int type = 0;
+                node *tmp = root;
+                while (tmp != NULL && strcmp(tmp->code, "Def") != 0)
+                {
+                    tmp = tmp->parent;
+                }
+                if (tmp != NULL)
+                {
+                    if (strcmp(tmp->children->c->children->c->code, "StructSpecifier") == 0)
+                    {
+                        type = tmp->children->c->children->c->struct_type;
+                    }
+                }
+                if (type == 0 && (type = find_var_type(root)) < 0)
                 {
                     // TODO: error
                 }
@@ -433,7 +445,7 @@ static void func(node *root)
     {
         // int exp_type = find_exp_type(root);
 
-        if (strstr(root->children->c->code, "ID") != NULL) //|| (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0))
+        if (root->child_num != 0 && strstr(root->children->c->code, "ID") != NULL) //|| (root->child_num == 3 && strcmp(root->children->next->c->code, "DOT") == 0))
         /*
             Exp -> ID LP Args RP
                 | ID LP RP
@@ -475,7 +487,7 @@ static void func(node *root)
 #ifdef DEBUG
             int t1 = find_exp_type(root->children->c);
             int t2 = find_exp_type(root->children->next->next->c);
-            printf("%s:%d, %s:%d\n", root->children->c->children->c->code, t1, root->children->next->next->c->children->c->code, t2);
+            printf("%s:%d, %s:%d\n", root->children->c->code, t1, root->children->next->next->c->code, t2);
             if (t1 != t2)
 #endif
 #ifndef DEBUG
@@ -507,7 +519,7 @@ static void func(node *root)
             if (root->parent->parent->child_num >= 2 && strcmp(root->parent->parent->children->next->c->code, "LB") == 0)
                 break;
 #ifdef DEBUG
-            printf("Exp -> Exp LB Exp RB");
+            printf("Exp -> Exp LB Exp RB\n");
 #endif
             char *id_name = find_exp_id_name(root);
             symbol_list *sl = is_in_symbol_table(id_name, 0);
@@ -571,9 +583,9 @@ static void func(node *root)
             int type;
             if ((type = find_exp_type(root->children->c)) < TYPE_struct)
                 print_error(illegal_use_of_dot, root->lineno, NULL, NULL);
-#ifdef DEBUG
-            printf("int Exp DOT ID, type=%d\n", type);
-#endif
+//#ifdef DEBUG
+            printf("int Exp DOT ID, %s.type=%d\n",root->children->c->code, type);
+//#endif
             struct_typedef *st = find_struct_by_id(type);
             if (!is_in_struct_field(root->children->next->next->c->code, st))
             {
@@ -663,7 +675,8 @@ static void print_error(int error_no, int error_line, char *msg0, char *msg1)
 static int find_exp_type(node *root)
 {
 #ifdef DEBUG
-    printf("Hah, child_num=%d\n", root->child_num);
+    printf("In find_exp_type\n");
+    printf("Hah, child_num=%d, root->code:%s\n", root->child_num, root->code);
     print_tree(root, 0);
 #endif
     /* INT:-1, FLOAT:-2 */
@@ -834,7 +847,10 @@ static char *find_symbol_type_name(int type)
 static char *find_exp_id_name(node *root)
 /* only for Exp -> Exp LB Exp RB */
 {
-    node *_start = root->children->c;
+#ifdef DEBUG
+    printf("In find_exp_id_name, root->symbol_name:%s, root->child_num:%d\n", root->code, root->child_num);
+#endif
+    node *_start = root;
     if (_start->child_num == 3 && strcmp(_start->children->c->code, "LP") == 0)
     { // Exp -> LP Exp RP
         return find_exp_id_name(_start->children->next->c);
@@ -847,12 +863,18 @@ static char *find_exp_id_name(node *root)
     { // Exp -> ID
         return _start->children->c->code + 4;
     }
-    else
-        return NULL;
+    else if (_start->child_num == 4 && strcmp(_start->children->next->c->code, "LB") == 0)
+    {
+        return find_exp_id_name(_start->children->c);
+    }
+    return NULL;
 }
 
 static int find_exp_arr_dimension(node *root)
 {
+#ifdef DEBUG
+    printf("In find_exp_arr_dimension\n");
+#endif
     if (root->child_num == 4 && strcmp(root->children->next->c->code, "LB") == 0)
     { // Exp -> Exp LB Exp RB
         return 1 + find_exp_arr_dimension(root->children->c);
@@ -929,7 +951,8 @@ static int add_struct_fields(char *name, int type, struct_typedef *struct_node)
 static int is_in_struct_field(char *name, struct_typedef *struct_node)
 {
     if (struct_node == NULL)
-        printf("in is_in_struct_field, error!\n");
+        return -1;
+    //printf("in is_in_struct_field, error, name:%s\n",name);
     field_list *_start = struct_node->name_list;
     while (_start != NULL)
     {

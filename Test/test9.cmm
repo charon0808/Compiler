@@ -9,5 +9,6 @@ int func(int i)
 int main()
 {
     float a;
-    func(1, aaaa);
+    int aal;
+    func(1, aal);
 }
