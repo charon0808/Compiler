@@ -69,23 +69,102 @@ extern void print_tree(node *, int);
 
 static int struct_typedef_num = 104;
 
+/*
+ * 将新声明的符号添加到符号表中（变量符号表或者函数符号表）
+ * parameters: char *symbol_name, int which_table, node *_node, int type, int dimension
+ * symbol_name: 变量名, which_table: 指明需要添加到变量符号表（0）还是函数符号表（1）
+ * _node: 变量声明处对应的语法树节点，目前没有用到, type: 变量的类型(TYPE_int, TYPE_float, TYPE_struct+i)
+ * dimension: 变量的维数，对于数组变量为数组的维数，普通变量为0 
+ * return: 返回值为0或1，表示当前变量是否已经在变量表中 
+ * */
 static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *, int, int);
+
+/* 
+ * 判断变量是否在符号表中（变量符号表或者函数符号表）
+ * parameters: char *symbol_name, int which_table
+ * symbol_name: 变量名, which_table: 指明需要添加到变量符号表（0）还是函数符号表（1）
+ * return: 如果变量在符号表中，返回对应的符号表节点（symbol_list *），负责返回 NULL
+ * */
 static symbol_list *is_in_symbol_table(char *, int /* 0 for var table, 1 for fun*/);
+
+/*
+ * 打印错误信息 
+ * parameter: int error_no, int error_line, char *msg0, char *msg1
+ * error_no: 错误号，在实验中为1 ~ 17, 38行定义的枚举类型对应这17个错误码, error_line: 输入程序中发生错误的行号
+ * msg0, msg1, 错误信息, 58行定义的error_str字符串数组分别对应17中错误信息的printf的格式化字符串, 
+ * msg0和msg1用于填充格式化字符串，如没有参数设置为NULL如 
+ * */
 static void print_error(int, int, char *, char *);
+
+/*
+ * 遍历语法树的主程序，在创建完成语法树后调用
+ * parameter: node *root
+ * root: 语法树开始遍历的根节点
+ * */
 static void func(node *);
+
+/*
+ * 递归确定 Exp 变量类型
+ * parameter: node *root
+ * root: Exp对应的节点 
+ * return: TYPE_int, TYPE_float, TYPE_struct+i 或 -1（有错误发生）
+ * TYPE_struct+i 没定义一个struct结构体就为其分配一个类型号用于唯一标识这种结构体，从TYPE_struct+1开始分配
+ * */
 static int find_exp_type(node *);
+
+/*
+ * 变量定义时在语法树中确定变量类型
+ * 参数与返回值同 find_exp_type 
+ * */
 static int find_var_type(node *);
+
+/*
+ * 用于确认赋值语句中等号左边是否为可赋值的左值
+ * parameter: node *root
+ * root: 等式左边部分对应的语法树中的节点
+ * return: 0或1，分别表示是左值和不是左值
+ * */
 static int is_left_value(node *);
+
+/*
+ * 将新定义的stuct信息添加到struct表中 
+ * parameter: char *struct_name, node *root
+ * struct_name: 结构体名，如果没有名字用 "%i"代替, i为结构体的类型号
+ * root 定义结构体对应的语法树的节点
+ * return: 结构体编号
+ * */
 static int add_struct_typedef(char *, node *);
+
+/*
+ * 判断结构体是否已经被定义过
+ * parameter: char *struct_name
+ * struct_name: 结构体名
+ * return: 如果存在返回结构体编号，否则返回-1
+ * */
 static int is_in_struct_typedef_table(char *);
+
+/*
+ * 确认函数定义时所有参数的类型 
+ * parameter: int *symbol_type, node *args_node
+ * symbol_type: 用于存储参数列表中所有参数类型的数组，以0结尾
+ * args_node: 参数对应的语法树节点
+ * */
 static void match_func_varlist(int *, node *);
+
+/*
+ * 根据参数类型号返回参数类型名
+ * parameter: int type
+ * type: 参数类型号
+ * return: 对应的类型名 
+ * */
 static char *find_symbol_type_name(int);
+
+static int add_struct_fields(char *, int, struct_typedef *);
 static char *find_exp_id_name(node *);
 static int find_exp_arr_dimension(node *);
 static char *find_exp_code(node *, char *);
 static struct_typedef *find_struct(char *);
 static struct_typedef *find_struct_by_id(int);
-static int add_struct_fields(char *, int, struct_typedef *);
 static int is_in_struct_field(char *, struct_typedef *);
 static int is_field_in_struct(char *, int);
 
