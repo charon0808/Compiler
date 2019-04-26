@@ -733,6 +733,7 @@ static int find_exp_type(node *root)
     { // ID
         int type;
         symbol_list *sl = is_in_symbol_table(root->children->c->code + 4, 0);
+        printf("%s.type:%d",sl->symbol_name,sl->type);
         if (sl == NULL)
         {
             // TODO: symbol not found error
