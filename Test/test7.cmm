@@ -1,9 +1,0 @@
-int main()
-{
-    float j;
-    int a;
-    struct{
-        int aa;
-    }aaa,bbb;
-    a.aa=11;
-}

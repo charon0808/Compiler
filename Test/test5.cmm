@@ -1,7 +1,0 @@
-int main()
-{
-    int i[3][1];
-    i[2][3] = 3.7;
-}
-
-///* type mismatch */

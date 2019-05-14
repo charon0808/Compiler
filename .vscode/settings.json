@@ -4,5 +4,11 @@
         "stdlib.h": "c",
         "*.cmm": "c",
         "*.y": "cpp"
+    },
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
     }
 }

@@ -1,9 +1,0 @@
-struct {
-    int hah;
-}test;
-
-int main()
- {
- float i;
- test.hah[2]=1;
- }
