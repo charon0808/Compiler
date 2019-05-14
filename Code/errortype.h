@@ -7,7 +7,7 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
-//#define DEBUG
+#define DEBUG
 
 #define Program 0
 #define ExtDefList 1
@@ -66,6 +66,7 @@ extern symbol_list *_func_symbol_table_start;
 extern struct_typedef *_struct_typedef_table_start;
 extern char *strdup(const char *s);
 extern void print_tree(node *, int);
+extern char *translate_COMPST(node *);
 
 static int struct_typedef_num = 104;
 
@@ -159,6 +160,7 @@ static void match_func_varlist(int *, node *);
  * */
 static char *find_symbol_type_name(int);
 
+static int add_func_varlist(char *, int);
 static int add_struct_fields(char *, int, struct_typedef *);
 static char *find_exp_id_name(node *);
 static int find_exp_arr_dimension(node *);
@@ -167,6 +169,7 @@ static struct_typedef *find_struct(char *);
 static struct_typedef *find_struct_by_id(int);
 static int is_in_struct_field(char *, struct_typedef *);
 static int is_field_in_struct(char *, int);
+static void init();
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension)
 {
@@ -290,6 +293,17 @@ static int is_in_struct_typedef_table(char *struct_name)
         _start = _start->next;
     }
     return -1; // not found error
+}
+
+static void init()
+{
+    char *r = (char *)malloc(sizeof(char) * 6);
+    sprintf(r, "read");
+    add_in2_symbol_table(r, 1, NULL, TYPE_int, -1);
+    char *w = (char *)malloc(sizeof(char) * 6);
+    sprintf(r, "write");
+    add_in2_symbol_table(w, 1, NULL, TYPE_int, -1);
+    add_func_varlist("write", TYPE_int);
 }
 
 static void func(node *root)

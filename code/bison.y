@@ -21,6 +21,8 @@
     void print_tree(node*, int);
     void free_all(node*);
 
+    extern void hah();
+
     char* empty="\"empty\"";
     char* cat;
     node* program_node;
@@ -70,8 +72,11 @@ Program: ExtDefList {
         add_child($$,$1);
         program_node=$$;
         if (error){
-            //print_tree($$,0);
+            print_tree($$,0);
+            init();
             func($$);
+            printf("hah\n");
+            hah($$);
             free_all($$);
         }
     }
