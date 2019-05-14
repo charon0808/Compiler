@@ -921,7 +921,7 @@ static char *find_symbol_type_name(int type)
             return NULL;
         }
         char *tmp = (char *)malloc(32 * sizeof(char));
-        sprintf(tmp, "%s\0", "struct ");
+        sprintf(tmp, "%s", "struct ");
         return strcat(tmp, _start->symbol_name);
     }
 }
