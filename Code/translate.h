@@ -185,7 +185,10 @@ static char *translate_EXP(node *exp_node, char *place)
             return ret;
         }
         symbol_list *sl=is_in_symbol_table(exp_node->children->c->code,1);
-
+        char *code2=(char *)malloc(sizeof(char)*256);
+        memset(code2,0,sizeof(char)*256);
+        code2=args_list_2_string(al,code2);
+        char *ret=(char *)malloc(sizeof(char)*(strlen(code1)+strlen(code2)+64));
     }
 }
 
@@ -328,6 +331,16 @@ char *translate_COND(node *cond_node, char *lable_true, char *label_false)
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
         sprintf(ret, "%s\nIF %s != #0 GOTO %s\nGOTO %s", code1, t1, lable_true, label_false);
     }
+}
+
+static char *args_list_2_string(args_list *al,char *s)
+{
+    if (al!=NULL)
+        args_list_2_string(al->next);
+    strcar(s,"ARG ");
+    strcat(s,al->symbol_name);
+    strcat(s,"\n");
+    return s;
 }
 
 #define _TRANSLATE_H_
