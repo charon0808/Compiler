@@ -24,6 +24,7 @@ iamt8 := #0
 WRITE iamt8
 LABEL iamlabel5 :
 LABEL iamlabel2 :
-iamt9 := #0
+iamt9 := iamt1 * iamt7
+WRITE iamt9
 RETURN iamt9
 

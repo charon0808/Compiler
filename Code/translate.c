@@ -104,11 +104,6 @@ char *translate_EXP(node *exp_node, char *place)
             // printf("translate_EXP 3\n");
             node *exp1_node = exp_node->children->c;
             node *exp2_node = exp_node->children->next->next->c;
-            char *t1 = new_tmp();
-            char *t2 = new_tmp();
-            char *code1 = translate_EXP(exp1_node, t1);
-            char *code2 = translate_EXP(exp2_node, t2);
-            char *code3 = (char *)malloc(sizeof(char) * 128);
             char op;
             switch (exp_node->children->next->c->code[0])
             {
@@ -127,6 +122,46 @@ char *translate_EXP(node *exp_node, char *place)
             default:
                 break;
             }
+
+            if (exp1_node->child_num == 1 && exp2_node->child_num == 1)
+            {
+                char *code1 = (char *)malloc(sizeof(char) * 64);
+                char *code2 = (char *)malloc(sizeof(char) * 64);
+                if (strstr(exp1_node->children->c->code, "ID") != NULL)
+                {
+                    sprintf(code1, "%s", strstr(exp1_node->children->c->code, ":") + 1);
+                }
+                else
+                {
+                    sprintf(code1, "#%s", strstr(exp1_node->children->c->code, ":") + 1);
+                }
+                if (strstr(exp2_node->children->c->code, "ID") != NULL)
+                {
+                    sprintf(code2, "%s", strstr(exp2_node->children->c->code, ":") + 1);
+                }
+                else
+                {
+                    sprintf(code2, "#%s", strstr(exp2_node->children->c->code, ":") + 1);
+                }
+                char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
+                sprintf("%s %c %s", code1, op, code2);
+                // free(code1);
+                // free(code2);
+                return ret;
+            }
+            else if (exp1_node->child_num == 1)
+            {
+            }
+            else if (exp2_node->child_num == 1)
+            {
+            }
+
+            char *t1 = new_tmp();
+            char *t2 = new_tmp();
+            char *code1 = translate_EXP(exp1_node, t1);
+            char *code2 = translate_EXP(exp2_node, t2);
+            char *code3 = (char *)malloc(sizeof(char) * 128);
+
             sprintf(code3, "%s := %s %c %s", place, t1, op, t2);
             char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + strlen(code3) + 64));
             sprintf(ret, "%s\n%s\n%s", code1, code2, code3);
