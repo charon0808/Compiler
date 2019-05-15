@@ -14,22 +14,25 @@ char *translate_COMPST(node *);
 char *translate_ARGS(node *, args_list *);
 char *translate_STMTLIST(node *);
 char *args_list_2_string(args_list *, char *);
+char *translate_FUNDEC(node *);
+void translate(node *);
 int tmp_count = 0;
 int label_count = 0;
 
 extern char *strdup(const char *s);
+extern void write_file(char *);
 
 char *new_tmp()
 {
     char *ret = (char *)malloc(sizeof(char) * 16);
-    sprintf(ret, "_T_%d", tmp_count++);
+    sprintf(ret, "iamt%d", tmp_count++);
     return ret;
 }
 
 char *new_label()
 {
     char *ret = (char *)malloc(sizeof(char) * 16);
-    sprintf(ret, "_L_%d", label_count++);
+    sprintf(ret, "iamlabel%d", label_count++);
     return ret;
 }
 
@@ -44,8 +47,8 @@ char *translate_EXP(node *exp_node, char *place)
         { // INT
             node *INT_node = exp_node->children->c;
             char *ret = (char *)malloc(sizeof(char) * (strlen(place) + strlen(INT_node->code) + 64));
-            sprintf(ret, "%s := #%s", place, INT_node->code + 4);
-            // printf("ret=\n%s\n",ret);
+            sprintf(ret, "%s := #%s", place, INT_node->code + 5);
+            // printf("ret=\n%s\n", ret);
             return ret;
         }
         else if (strstr(exp_node->children->c->code, "ID:") != NULL)
@@ -62,7 +65,7 @@ char *translate_EXP(node *exp_node, char *place)
         // printf("translate_EXP 2212\n");
         if (strcmp(exp_node->children->next->c->code, "ASSIGNOP") == 0)
         { // Exp1 ASSIGNOP Exp2
-        // printf("translate_EXP 2.3\n");
+            // printf("translate_EXP 2.3\n");
             node *exp1_node = exp_node->children->c;
             node *exp2_node = exp_node->children->next->next->c;
             // TODO: current only for Exp1 -> ID
@@ -73,12 +76,12 @@ char *translate_EXP(node *exp_node, char *place)
                 if (sl == NULL)
                 {
                     // TODO: symbol not found error
-                    // printf("not in symbol_table!!!\n");
+                    printf("not in symbol_table!!!\n");
                 }
                 char *t1 = new_tmp();
-                char *code1 = translate_EXP(exp1_node, t1);
+                char *code1 = translate_EXP(exp2_node, t1);
                 char *code2 = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
-        // printf("\n\ncode1=%s\n\ncode2=%s\n\n\n",code1,code2);
+                // printf("\n\ncode1=%s\n\ncode2=%s\n\n\n", code1, code2);
                 sprintf(code2, "%s := %s\n%s := %s", sl->symbol_name, t1, place, sl->symbol_name);
                 // printf("translate_EXP 1.2\n");
                 char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
@@ -90,7 +93,7 @@ char *translate_EXP(node *exp_node, char *place)
             }
             else
             {
-                // printf("Exp1 ASSIGNOP Exp2, Exp1 is not ID\n");
+                printf("Exp1 ASSIGNOP Exp2, Exp1 is not ID\n");
             }
         }
         else if (strcmp(exp_node->children->next->c->code, "PLUS") == 0 ||
@@ -163,20 +166,21 @@ char *translate_EXP(node *exp_node, char *place)
         sprintf(code0, "%s := #0", place);
         char *code1 = translate_COND(exp_node, label1, label2);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code0) + strlen(code1) + 64));
-        sprintf(ret, "%s\n%s\nLABEL %s\n%s := #1\nLABEL %s", code0, code1, label1, place, label2);
+        sprintf(ret, "%s\n%s\nLABEL %s :\n%s := #1\nLABEL %s :", code0, code1, label1, place, label2);
         // free(label1);
         // free(label2);
         // free(code0);
         // free(code1);
         return ret;
     }
-    else if (exp_node->child_num == 3 && strcmp(exp_node->children->next->next->c->code, "LP") == 0)
+    else if (exp_node->child_num == 3 && strcmp(exp_node->children->next->c->code, "LP") == 0 && strcmp(exp_node->children->next->next->c->code, "RP") == 0)
     { // ID LP RP
         // printf("translate_EXP 6\n");
+        // printf("id=%s\n", exp_node->children->c->code);
         if (strcmp(exp_node->children->c->code + 4, "read") == 0)
         {
             char *ret = (char *)malloc(sizeof(char) * 32);
-            sprintf(ret, "read %s", place);
+            sprintf(ret, "READ %s", place);
             return ret;
         }
         symbol_list *sl = is_in_symbol_table(exp_node->children->c->code + 4, 1);
@@ -202,10 +206,12 @@ char *translate_EXP(node *exp_node, char *place)
             // free(code1);
             return ret;
         }
-        symbol_list *sl = is_in_symbol_table(exp_node->children->c->code, 1);
+        // printf("translate_EXP 7.1\n");
+        symbol_list *sl = is_in_symbol_table(exp_node->children->c->code + 4, 1);
+        // printf("sl->symbol_name=%s\n",sl->symbol_name);
         char *code2 = (char *)malloc(sizeof(char) * 256);
-        memset(code2, 0, sizeof(char) * 256);
-        code2 = args_list_2_string(al, code2);
+        code2[0] = '\0';
+        code2 = args_list_2_string(al->next, code2);
         code2[strlen(code2) - 1] = '\0';
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
         sprintf(ret, "%s\n%s\n%s := CALL %s", code1, code2, place, sl->symbol_name);
@@ -213,7 +219,13 @@ char *translate_EXP(node *exp_node, char *place)
         // free(code2);
         return ret;
     }
-        // printf("translate_EXP ???\n");
+    else if (exp_node->child_num == 3 && strcmp(exp_node->children->c->code, "LP") == 0)
+    { // Exp -> LP Exp1 RP
+        return translate_EXP(exp_node->children->next->c, place);
+    }
+    // printf("???tree=\n");
+    // print_tree(exp_node, 0);
+    // printf("translate_EXP ???\n");
 }
 
 char *translate_STMT(node *stmt_node)
@@ -222,7 +234,15 @@ char *translate_STMT(node *stmt_node)
     if (stmt_node->child_num == 2 && strcmp(stmt_node->children->next->c->code, "SEMI") == 0)
     { // Stmt -> Exp SEMI
         // printf("translate_STMT 8\n");
-        return translate_EXP(stmt_node->children->c, NULL);
+        char *code1 = translate_EXP(stmt_node->children->c, NULL);
+        // printf("in stmt, code1=%s\n\n",code1);
+        char *tmp;
+        if ((tmp = strstr(code1, "(null)")) != NULL)
+        {
+            *(--tmp) = '\0';
+        }
+
+        return code1;
     }
     else if (stmt_node->child_num == 1 && strcmp(stmt_node->children->c->code, "CompSt") == 0)
     { // Stmt -> CompSt
@@ -234,14 +254,14 @@ char *translate_STMT(node *stmt_node)
         // printf("translate_STMT 10\n");
         char *t1 = new_tmp();
         char *code1 = translate_EXP(stmt_node->children->next->c, t1);
-        // printf("\n\ncode1=%s\n\n\n",code1);
+        // printf("\n\ncode1=%s\n\n\n", code1);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
         sprintf(ret, "%s\nRETURN %s", code1, t1);
         // free(t1);
         // free(code1);
         return ret;
     }
-    else if (strcmp(stmt_node->children->c->code, "IF")==0)
+    else if (strcmp(stmt_node->children->c->code, "IF") == 0)
     {
         if (stmt_node->child_num == 5)
         { // IF LP Exp RP Stmt1
@@ -253,7 +273,7 @@ char *translate_STMT(node *stmt_node)
             char *code1 = translate_COND(exp_node, label1, label2);
             char *code2 = translate_STMT(stmt1_node);
             char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
-            sprintf(ret, "%s\nLABEL %s\n%s\nLABEL %s", code1, label1, code2, label2);
+            sprintf(ret, "%s\nLABEL %s :\n%s\nLABEL %s :", code1, label1, code2, label2);
             // free(label1);
             // free(label2);
             // free(code1);
@@ -273,7 +293,7 @@ char *translate_STMT(node *stmt_node)
             char *code2 = translate_STMT(stmt1_node);
             char *code3 = translate_STMT(stmt2_node);
             char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + strlen(code3) + 128));
-            sprintf(ret, "%s\nLABEL %s\n%s\nGOTO %s\nLABEL %s\n%s\nLABEL %s", code1, label1, code2, label3, label2, code3, label3);
+            sprintf(ret, "%s\nLABEL %s :\n%s\nGOTO %s\nLABEL %s :\n%s\nLABEL %s :", code1, label1, code2, label3, label2, code3, label3);
             // free(label1);
             // free(label2);
             // free(label3);
@@ -294,7 +314,7 @@ char *translate_STMT(node *stmt_node)
         char *code1 = translate_COND(exp_node, label2, label3);
         char *code2 = translate_STMT(stmt1_node);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
-        sprintf(ret, "LABEL %s\n%s\nLABEL %s\n%s\nGOTO %s\nLABEL %s", label1, code1, label2, code2, label1, label3);
+        sprintf(ret, "LABEL %s :\n%s\nLABEL %s :\n%s\nGOTO %s\nLABEL %s :", label1, code1, label2, code2, label1, label3);
         // free(label1);
         // free(label2);
         // free(label3);
@@ -339,7 +359,7 @@ char *translate_COND(node *cond_node, char *lable_true, char *label_false)
         char *code1 = translate_COND(exp1_node, label1, label_false);
         char *code2 = translate_COND(exp2_node, lable_true, label_false);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
-        sprintf(ret, "%s\nLABEL %s\n%s", code1, label1, code2);
+        sprintf(ret, "%s\nLABEL %s :\n%s", code1, label1, code2);
         // free(label1);
         // free(code1);
         // free(code2);
@@ -354,7 +374,7 @@ char *translate_COND(node *cond_node, char *lable_true, char *label_false)
         char *code1 = translate_COND(exp1_node, lable_true, label1);
         char *code2 = translate_COND(exp2_node, lable_true, label_false);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
-        sprintf(ret, "%s\nLABEL %s\n%s", code1, label1, code2);
+        sprintf(ret, "%s\nLABEL %s :\n%s", code1, label1, code2);
         // free(label1);
         // free(code1);
         // free(code2);
@@ -420,7 +440,7 @@ char *translate_STMTLIST(node *stmtlist_node)
         char *code1 = translate_STMT(stmt_node);
         char *code2 = translate_STMTLIST(stmtlist1_node);
         // printf("translate_STMTLIST 20.1\n");
-        // printf("\ncode1=\n%s\n\ncode2=%s\n\n",code1,code2);
+        // printf("\ncode1=\n%s\n\ncode2=%s\n\n", code1, code2);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
         sprintf(ret, "%s\n%s", code1, code2);
         // printf("\n\nret=\n%s\n\n\n", ret);
@@ -439,12 +459,80 @@ char *translate_STMTLIST(node *stmtlist_node)
     }
 }
 
-void hah(node *root)
+char *translate_PARAMDEC(node *paramdec_node)
+{ // ParamDec -> Specifier VarDec
+    node *vardec_node = paramdec_node->children->next->c;
+    while (vardec_node->child_num != 1)
+        vardec_node = vardec_node->children->c;
+    char *code1 = strdup(vardec_node->children->c->code + 4);
+    char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
+    sprintf(ret, "PARAM %s", code1);
+    // free(code1);
+    return ret;
+}
+
+char *translate_VARLIST(node *varlist_node)
+{
+    if (varlist_node->child_num == 3)
+    { // VarList -> ParamDec COMMA VarList1
+        node *paramdec_node = varlist_node->children->c;
+        node *varlist1_node = varlist1_node->children->next->next->c;
+        char *code1 = translate_PARAMDEC(paramdec_node);
+        char *code2 = translate_VARLIST(varlist1_node);
+        char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
+        sprintf(ret, "%s\n%s", code1, code2);
+        // free(code1);
+        // free(code2);
+        return ret;
+    }
+    else
+    { // VarList -> ParamDec
+        node *paramdec_node = varlist_node->children->c;
+        return translate_PARAMDEC(paramdec_node);
+    }
+}
+
+char *translate_FUNDEC(node *funcdec_node)
+{
+    if (funcdec_node->child_num == 4)
+    { // FunDec -> ID LP VarList RP
+        node *varlist_node = funcdec_node->children->next->next->c;
+        char *code1 = (char *)malloc(sizeof(char) * 64);
+        sprintf(code1, "FUNCTION %s :", funcdec_node->children->c->code + 4);
+        char *code2 = translate_VARLIST(varlist_node);
+        char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
+        sprintf(ret, "%s\n%s", code1, code2);
+        // free(code1);
+        // free(code2);
+        return ret;
+    }
+    else
+    { // FunDec -> ID LP RP
+        char *code1 = (char *)malloc(sizeof(char) * 64);
+        sprintf(code1, "FUNCTION %s :", funcdec_node->children->c->code + 4);
+        return code1;
+    }
+}
+
+void translate(node *root)
 {
     // printf("in hah\n");
-    switch (root->typeno){
-        case CompSt:
-             printf("\n\nCompst=\n%s\n\n\n",translate_COMPST(root));
+    switch (root->typeno)
+    {
+    case FunDec:
+    {
+        char *o = translate_FUNDEC(root);
+        printf("%s\n", o);
+        write_file(o);
+        break;
+    }
+    case CompSt:
+    {
+        char *oo = translate_COMPST(root);
+        printf("%s\n", oo);
+        write_file(oo);
+        break;
+    }
     }
     if (root->children != NULL)
     {
@@ -452,7 +540,7 @@ void hah(node *root)
         while (__start != NULL)
         {
             if (__start->c->children != NULL)
-                hah(__start->c);
+                translate(__start->c);
             __start = __start->next;
         }
     }
@@ -460,10 +548,12 @@ void hah(node *root)
 
 char *args_list_2_string(args_list *al, char *s)
 {
-    strcat(s, "ARG ");
-    strcat(s, al->symbol_name);
-    strcat(s, "\n");
     if (al != NULL)
+    {
+        strcat(s, "ARG ");
+        strcat(s, al->symbol_name);
+        strcat(s, "\n");
         args_list_2_string(al->next, s);
+    }
     return s;
 }

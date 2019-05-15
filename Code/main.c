@@ -12,7 +12,8 @@ extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
 extern struct_typedef *_struct_symbol_table_start;
 extern int error;
-extern FILE *f;
+extern FILE *input_file;
+extern FILE *output_file;
 extern char *cat;
 extern int yylex(void);
 extern void yyerror(const char *);
@@ -132,15 +133,32 @@ void yyerror(const char *s)
     //yyparse();
 }
 
+void write_file(char *s)
+{
+    fprintf(output_file, "%s\n", s);
+}
+
 int main(int argc, char *argv[])
 {
-    if (argc > 1)
-        if ((f = freopen(argv[1], "r", stdin)) == NULL)
+    if (argc == 3)
+    {
+        if ((input_file = freopen(argv[1], "r", stdin)) == NULL)
         {
             perror(argv[1]);
             return 1;
         }
-    cat = (char *)malloc(sizeof(char) * 64);
-    yyparse();
+        cat = (char *)malloc(sizeof(char) * 64);
+        output_file = fopen(argv[2], "w+");
+        if (output_file==NULL)
+        {
+            perror(argv[2]);
+            return -1;
+        }
+        yyparse();
+    }
+    else
+    {
+        printf("Usage: ./parser inputfile outputfile\n");
+    }
     return 0;
 }

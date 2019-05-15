@@ -21,12 +21,13 @@
     void print_tree(node*, int);
     void free_all(node*);
 
-    extern void hah();
+    extern void translate(node *);
 
     char* empty="\"empty\"";
     char* cat;
     node* program_node;
-    FILE* f;
+    FILE* input_file;
+    FILE* output_file;
     extern int yylineno;
     extern char* yytext;
     int yylex(void);
@@ -76,7 +77,7 @@ Program: ExtDefList {
             print_tree($$,0);
             func($$);
             printf("hah\n");
-            hah($$);
+            translate($$);
             free_all($$);
         }
     }

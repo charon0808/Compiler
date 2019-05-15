@@ -214,6 +214,7 @@ static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var 
 
 static symbol_list *is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for func table */)
 {
+    //printf("in is_in_symbol_table, name=%s\n",symbol_name);
     symbol_list *_start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
     while (_start != NULL)
     {
@@ -496,6 +497,8 @@ static void func(node *root)
     case VarList:
     {
         char *func_name = root->parent->children->c->code + 4;
+        node *tmp=root;
+        while(strcmp(tmp->code,""))
         // VarList -> ParamDec COMMA VarList
         // VarList -> ParamDec
         add_func_varlist(func_name, find_var_type(root->children->c));
