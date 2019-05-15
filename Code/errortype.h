@@ -7,7 +7,7 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
-#define DEBUG
+//#define DEBUG
 
 #define Program 0
 #define ExtDefList 1
@@ -297,11 +297,12 @@ static int is_in_struct_typedef_table(char *struct_name)
 
 static void init()
 {
+    printf("In init\n");
     char *r = (char *)malloc(sizeof(char) * 6);
     sprintf(r, "read");
     add_in2_symbol_table(r, 1, NULL, TYPE_int, -1);
     char *w = (char *)malloc(sizeof(char) * 6);
-    sprintf(r, "write");
+    sprintf(w, "write");
     add_in2_symbol_table(w, 1, NULL, TYPE_int, -1);
     add_func_varlist("write", TYPE_int);
 }
@@ -627,6 +628,10 @@ static void func(node *root)
         /* Exp -> ID LP Args RP
                |  ID LP RP */
         {
+            if (strcmp(root->children->c->code + 4, "read") == 0 || strcmp(root->children->c->code + 4, "write") == 0)
+            {
+                break;
+            }
             int symbol_type[32];
             memset(symbol_type, 0xff, sizeof(symbol_type));
             match_func_varlist(symbol_type, root->children->next->next->c);
@@ -898,11 +903,15 @@ static int find_var_type(node *root)
 
 static void match_func_varlist(int *symbol_type, node *args_node)
 {
+#ifdef DEBUG
+    printf("In match_func_varlist\n");
+#endif
     if (args_node == NULL)
     { // means no args
         *symbol_type = 0;
     }
     *symbol_type = find_exp_type(args_node->children->c);
+    printf("123\n");
     if (args_node->child_num == 3)
     { // Args -> Exp COMMA Args
         match_func_varlist(symbol_type + 1, args_node->children->next->next->c);

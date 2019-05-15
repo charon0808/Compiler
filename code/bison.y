@@ -72,8 +72,8 @@ Program: ExtDefList {
         add_child($$,$1);
         program_node=$$;
         if (error){
-            print_tree($$,0);
             init();
+            print_tree($$,0);
             func($$);
             printf("hah\n");
             hah($$);
