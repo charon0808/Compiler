@@ -1,0 +1,43 @@
+FUNCTION a :
+iamt3 := #3
+iamt4 := #4
+iamt1 := iamt3 * iamt4
+iamt2 := #12
+iamt0 := iamt1 + iamt2
+RETURN iamt0
+
+FUNCTION b :
+PARAM c
+PARAM d
+PARAM e
+iamt8 := CALL a
+iamt9 := d
+iamt6 := iamt8 + iamt9
+iamt10 := e
+iamt11 := CALL a
+iamt7 := iamt10 + iamt11
+iamt5 := iamt6 * iamt7
+f := iamt5
+iamt12 := f
+RETURN iamt12
+
+FUNCTION main :
+READ iamt13
+h := iamt13
+READ iamt14
+i := iamt14
+READ iamt15
+j := iamt15
+iamt17 := h
+iamt18 := i
+iamt19 := j
+ARG iamt19
+ARG iamt18
+ARG iamt17
+iamt16 := CALL b
+g := iamt16
+iamt20 := g
+WRITE iamt20
+iamt21 := #1
+RETURN iamt21
+

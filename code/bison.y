@@ -46,13 +46,12 @@
 %token <val> SEMI COMMA 
 %right <val> ASSIGNOP
 %left  <val> LT LE EQ NE GT GE
-%left  <val> PLUS MINUS
-%token <val> STAR
-%left  <val> DIV AND OR 
 %right <val> NOT
 %left  <val> DOT
 %left  <val> LP RP LB RB 
-%token <val> LC RC
+%left  <val> LC RC
+%left  <val> STAR DIV AND OR 
+%left  <val> PLUS MINUS
 %token <val> STRUCT RETURN
 %token <val> IF ELSE WHILE
 %token <val> TYPE
@@ -76,7 +75,6 @@ Program: ExtDefList {
             init();
             print_tree($$,0);
             func($$);
-            printf("hah\n");
             translate($$);
             free_all($$);
         }
@@ -182,8 +180,8 @@ VarDec: ID {
             $$=node_con("VarDec", 6);
             add_child($$,($1));
             add_child($$,node_con("LB",-1));
-            strcpy(cat,"INT: ");
-            add_child($$,node_con(strcat(cat,$3.name),-1));
+            sprintf(cat,"INT: %d",$3.ival);
+            add_child($$,node_con(cat,-1));
             add_child($$,node_con("RB",-1));
         }
     | error {;}
@@ -355,18 +353,6 @@ Exp: Exp ASSIGNOP Exp {
         add_child($$,node_con(strcat(cat,$2.name),-3));
         add_child($$,$3);
     }
-    | Exp PLUS Exp {
-        $$=node_con("Exp", 15);
-        add_child($$,$1);
-        add_child($$,node_con("PLUS", -4));
-        add_child($$,$3);
-    }
-    | Exp MINUS Exp {
-        $$=node_con("Exp", 15);
-        add_child($$,$1);
-        add_child($$,node_con("MINUS", -4));
-        add_child($$,$3);
-    }
     | Exp STAR Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
@@ -377,6 +363,18 @@ Exp: Exp ASSIGNOP Exp {
         $$=node_con("Exp", 15);
         add_child($$,$1);
         add_child($$,node_con("DIV", -4));
+        add_child($$,$3);
+    }
+    | Exp PLUS Exp {
+        $$=node_con("Exp", 15);
+        add_child($$,$1);
+        add_child($$,node_con("PLUS", -4));
+        add_child($$,$3);
+    }
+    | Exp MINUS Exp {
+        $$=node_con("Exp", 15);
+        add_child($$,$1);
+        add_child($$,node_con("MINUS", -4));
         add_child($$,$3);
     }
     | LP Exp RP {

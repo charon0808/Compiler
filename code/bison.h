@@ -35,12 +35,15 @@ typedef struct symbol_list
     int type;
     int varlist[32];
     int dimension;
+    int *array_width;
 } symbol_list;
 
 typedef struct field_list
 {
     char *symbol_name;
     int type;
+    int start_location;
+    int size;
     struct field_list *next;
 } field_list;
 
@@ -51,6 +54,7 @@ typedef struct struct_typedef
     char *symbol_name;
     struct struct_typedef *next;
     field_list *name_list;
+    int total_size;
     int id;
 } struct_typedef;
 

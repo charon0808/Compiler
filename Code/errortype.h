@@ -78,7 +78,7 @@ static int struct_typedef_num = 104;
  * dimension: 变量的维数，对于数组变量为数组的维数，普通变量为0 
  * return: 返回值为0或1，表示当前变量是否已经在变量表中 
  * */
-static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *, int, int);
+static int add_in2_symbol_table(char *, int /* 0 for var table, 1 for fun*/, node *, int, int, int *);
 
 /* 
  * 判断变量是否在符号表中（变量符号表或者函数符号表）
@@ -171,7 +171,7 @@ static int is_in_struct_field(char *, struct_typedef *);
 static int is_field_in_struct(char *, int);
 static void init();
 
-static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension)
+static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension, int *aw)
 {
     //#ifdef DEBUG
     //printf("In add_in2_symbol_table, symbol_name:%s, type=%d\n", symbol_name, type);
@@ -208,13 +208,14 @@ static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var 
     _start->tree_node = _node;
     _start->type = type;
     _start->dimension = dimension;
+    _start->array_width = aw;
     memset(_start->varlist, 0xff, sizeof(_start->varlist));
     return 1;
 }
 
 static symbol_list *is_in_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for func table */)
 {
-    //printf("in is_in_symbol_table, name=%s\n",symbol_name);
+    // printf("in is_in_symbol_table, name=%s\n", symbol_name);
     symbol_list *_start = which_table == 0 ? _var_symbol_table_start : _func_symbol_table_start;
     while (_start != NULL)
     {
@@ -261,7 +262,7 @@ static int add_struct_typedef(char *struct_name, node *root)
     struct_typedef *_start = _struct_typedef_table_start;
     while (_start != NULL && _start->next != NULL)
     {
-        printf("In add_struct_typedef, struct_name=%s, _start->symbol_name=%s\n", struct_name, _start->symbol_name);
+        // printf("In add_struct_typedef, struct_name=%s, _start->symbol_name=%s\n", struct_name, _start->symbol_name);
         if (strcmp(struct_name, _start->symbol_name) == 0)
             return -1; // already exists error
         _start = _start->next;
@@ -298,13 +299,13 @@ static int is_in_struct_typedef_table(char *struct_name)
 
 static void init()
 {
-    printf("In init\n");
+    // printf("init\n");
     char *r = (char *)malloc(sizeof(char) * 6);
     sprintf(r, "read");
-    add_in2_symbol_table(r, 1, NULL, TYPE_int, -1);
+    add_in2_symbol_table(r, 1, NULL, TYPE_int, -1, NULL);
     char *w = (char *)malloc(sizeof(char) * 6);
     sprintf(w, "write");
-    add_in2_symbol_table(w, 1, NULL, TYPE_int, -1);
+    add_in2_symbol_table(w, 1, NULL, TYPE_int, -1, NULL);
     add_func_varlist("write", TYPE_int);
 }
 
@@ -462,15 +463,19 @@ static void func(node *root)
                 {
                     int dimension = 0;
                     node *_start = root;
+                    int *arr_width = (int *)malloc(sizeof(int) * 32);
+                    memset(arr_width, 0xff, sizeof(int) * 32);
                     while (strcmp(_start->parent->code, "VarDec") == 0)
                     {
                         _start = _start->parent;
+                        int width = atoi(_start->children->next->next->c->code + 5);
+                        arr_width[dimension] = width;
                         dimension++;
                     }
 #ifdef DEBUG
                     printf("in VarDec, name: %s, type: %d\n", child_id->code + 4, type);
 #endif
-                    add_in2_symbol_table(child_id->code + 4, 0, child_id, type, dimension);
+                    add_in2_symbol_table(child_id->code + 4, 0, child_id, type, dimension, arr_width);
                 }
                 this_type = type;
             }
@@ -491,14 +496,17 @@ static void func(node *root)
             print_error(redefined_func, child_id->lineno, child_id->code + 4, NULL);
         }
         else
-            add_in2_symbol_table(child_id->code + 4, 1, child_id, find_var_type(root), -1);
+            add_in2_symbol_table(child_id->code + 4, 1, child_id, find_var_type(root), -1, NULL);
         break;
     }
     case VarList:
     {
-        char *func_name = root->parent->children->c->code + 4;
-        node *tmp=root;
-        while(strcmp(tmp->code,""))
+        node *tmp = root;
+        while (tmp != NULL && strcmp(tmp->code, "FunDec") != 0)
+        {
+            tmp = tmp->parent;
+        }
+        char *func_name = tmp->children->c->code + 4;
         // VarList -> ParamDec COMMA VarList
         // VarList -> ParamDec
         add_func_varlist(func_name, find_var_type(root->children->c));
@@ -836,7 +844,6 @@ static int find_exp_type(node *root)
     { // ID
         int type;
         symbol_list *sl = is_in_symbol_table(root->children->c->code + 4, 0);
-        //printf("%s.type:%d", sl->symbol_name, sl->type);
         if (sl == NULL)
         {
             // TODO: symbol not found error
@@ -909,12 +916,12 @@ static void match_func_varlist(int *symbol_type, node *args_node)
 #ifdef DEBUG
     printf("In match_func_varlist\n");
 #endif
-    if (args_node == NULL)
+    if (args_node == NULL || strcmp(args_node->code, "Args") != 0)
     { // means no args
-        *symbol_type = 0;
+        *symbol_type = -1;
+        return;
     }
     *symbol_type = find_exp_type(args_node->children->c);
-    printf("123\n");
     if (args_node->child_num == 3)
     { // Args -> Exp COMMA Args
         match_func_varlist(symbol_type + 1, args_node->children->next->next->c);
@@ -1050,9 +1057,30 @@ static int add_struct_fields(char *name, int type, struct_typedef *struct_node)
         _start->next = (field_list *)malloc(sizeof(field_list));
         _start = _start->next;
     }
+    int sl = 0;
+    field_list *tmp = struct_node->name_list;
+    while (tmp != _start)
+    {
+        if (tmp->type == TYPE_int || tmp->type == TYPE_float)
+            sl += 4;
+        else if (tmp->type >= TYPE_struct)
+        {
+            struct_typedef *st = find_struct_by_id(tmp->type);
+            sl += st->total_size;
+        }
+    }
+    _start->start_location = sl;
+    if (type == TYPE_int || type == TYPE_float)
+        _start->size = 4;
+    else if (type >= TYPE_struct)
+    {
+        struct_typedef *st = find_struct_by_id(tmp->type);
+        _start->size = st->total_size;
+    }
     _start->symbol_name = strdup(name);
     _start->type = type;
     _start->next = NULL;
+    struct_node->total_size = _start->start_location + _start->size;
     return 1;
 }
 

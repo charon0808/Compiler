@@ -189,7 +189,7 @@ char *translate_EXP(node *exp_node, char *place)
             // TODO: function symbol not found error
         }
         char *ret = (char *)malloc(sizeof(char) * 64);
-        sprintf("%s := CALL %s", place, sl->symbol_name);
+        sprintf(ret, "%s := CALL %s", place, sl->symbol_name);
         return ret;
     }
     else if (exp_node->child_num == 4 && strcmp(exp_node->children->next->c->code, "LP") == 0)
@@ -476,7 +476,7 @@ char *translate_VARLIST(node *varlist_node)
     if (varlist_node->child_num == 3)
     { // VarList -> ParamDec COMMA VarList1
         node *paramdec_node = varlist_node->children->c;
-        node *varlist1_node = varlist1_node->children->next->next->c;
+        node *varlist1_node = varlist_node->children->next->next->c;
         char *code1 = translate_PARAMDEC(paramdec_node);
         char *code2 = translate_VARLIST(varlist1_node);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
@@ -550,10 +550,10 @@ char *args_list_2_string(args_list *al, char *s)
 {
     if (al != NULL)
     {
+        args_list_2_string(al->next, s);
         strcat(s, "ARG ");
         strcat(s, al->symbol_name);
         strcat(s, "\n");
-        args_list_2_string(al->next, s);
     }
     return s;
 }
