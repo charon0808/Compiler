@@ -9,35 +9,31 @@ iamt2 := n
 RETURN iamt2
 GOTO iamlabel2
 LABEL iamlabel1 :
-iamt4 := n
-iamt7 := n
-iamt8 := #1
-iamt6 := iamt7 - iamt8
-ARG iamt6
-iamt5 := CALL fact
-iamt3 := iamt4 * iamt5
+iamt5 := n - #1
+ARG iamt5
+iamt4 := CALL fact
+iamt3 :=  n * iamt4
 RETURN iamt3
 LABEL iamlabel2 :
 
 FUNCTION main :
-READ iamt9
-m := iamt9
-iamt10 := m
-iamt11 := #1
-IF iamt10  > iamt11 GOTO iamlabel3
+READ m
+m := m + #2
+m := m - #2
+iamt6 := m
+iamt7 := #1
+IF iamt6  > iamt7 GOTO iamlabel3
 GOTO iamlabel4
 LABEL iamlabel3 :
-iamt13 := m
-ARG iamt13
-iamt12 := CALL fact
-result := iamt12
+iamt8 := m
+ARG iamt8
+result := CALL fact
 GOTO iamlabel5
 LABEL iamlabel4 :
-iamt14 := #1
-result := iamt14
+result := #1
 LABEL iamlabel5 :
-iamt15 := result
-WRITE iamt15
-iamt16 := #0
-RETURN iamt16
+iamt9 := result
+WRITE iamt9
+iamt10 := #0
+RETURN iamt10
 

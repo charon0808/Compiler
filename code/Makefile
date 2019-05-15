@@ -35,7 +35,7 @@ syntax-c: $(YFILE)
 .PHONY: clean test
 test: clean
 	make
-	../parser ../Test/test4.cmm ../Test/test4.ir
+	../parser ../Test/test2.cmm ../Test/test2.ir
 git: clean
 	git add ..
 	git commit -m "update"

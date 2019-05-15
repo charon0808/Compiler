@@ -40,6 +40,7 @@ char *translate_EXP(node *exp_node, char *place)
 {
     // printf("in translate_exp, tree=\n");
     // print_tree(exp_node,0);
+    // printf("place=%s\n",place);
     if (exp_node->child_num == 1)
     {
         // printf("translate_EXP 1\n");
@@ -78,9 +79,14 @@ char *translate_EXP(node *exp_node, char *place)
                     // TODO: symbol not found error
                     printf("not in symbol_table!!!\n");
                 }
-                char *t1 = new_tmp();
+                // char *t1 = new_tmp();
+                char *t1 = (char *)malloc(sizeof(char) * 64);
+                sprintf(t1, "%s", ID_node->code + 4);
+                // printf("t1=%s\n",t1);
                 char *code1 = translate_EXP(exp2_node, t1);
-                char *code2 = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
+                return code1;
+
+                /*char *code2 = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
                 // printf("\n\ncode1=%s\n\ncode2=%s\n\n\n", code1, code2);
                 sprintf(code2, "%s := %s\n%s := %s", sl->symbol_name, t1, place, sl->symbol_name);
                 // printf("translate_EXP 1.2\n");
@@ -89,7 +95,7 @@ char *translate_EXP(node *exp_node, char *place)
                 // free(t1);
                 // free(code1);
                 // free(code2);
-                return ret;
+                return ret;*/
             }
             else
             {
@@ -129,31 +135,45 @@ char *translate_EXP(node *exp_node, char *place)
                 char *code2 = (char *)malloc(sizeof(char) * 64);
                 if (strstr(exp1_node->children->c->code, "ID") != NULL)
                 {
-                    sprintf(code1, "%s", strstr(exp1_node->children->c->code, ":") + 1);
+                    sprintf(code1, "%s", strstr(exp1_node->children->c->code, ":") + 2);
                 }
                 else
                 {
-                    sprintf(code1, "#%s", strstr(exp1_node->children->c->code, ":") + 1);
+                    sprintf(code1, "#%s", strstr(exp1_node->children->c->code, ":") + 2);
                 }
                 if (strstr(exp2_node->children->c->code, "ID") != NULL)
                 {
-                    sprintf(code2, "%s", strstr(exp2_node->children->c->code, ":") + 1);
+                    sprintf(code2, "%s", strstr(exp2_node->children->c->code, ":") + 2);
                 }
                 else
                 {
-                    sprintf(code2, "#%s", strstr(exp2_node->children->c->code, ":") + 1);
+                    sprintf(code2, "#%s", strstr(exp2_node->children->c->code, ":") + 2);
                 }
                 char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
-                sprintf("%s %c %s", code1, op, code2);
+                sprintf(ret, "%s := %s %c %s", place, code1, op, code2);
                 // free(code1);
                 // free(code2);
                 return ret;
             }
             else if (exp1_node->child_num == 1)
             {
+                char *t1 = new_tmp();
+                char *code1 = translate_EXP(exp2_node, t1);
+                char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
+                sprintf(ret, "%s\n%s := %s %c %s", code1, place, strstr(exp1_node->children->c->code, ":") + 1, op, t1);
+                // free(t1);
+                // free(code1);
+                return ret;
             }
             else if (exp2_node->child_num == 1)
             {
+                char *t1 = new_tmp();
+                char *code1 = translate_EXP(exp1_node, t1);
+                char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
+                sprintf(ret, "%s\n%s := %s op %s", code1, place, t1, strstr(exp2_node->children->c->code, ":") + 1);
+                // free(t1);
+                // free(code1);
+                return ret;
             }
 
             char *t1 = new_tmp();
@@ -175,10 +195,16 @@ char *translate_EXP(node *exp_node, char *place)
     }
     // printf("exphah\n");
     if (exp_node->child_num == 2 && strcmp(exp_node->children->c->code, "MINUS") == 0)
-    { // MINUS EXP
+    { // MINUS EXP1
         // printf("translate_EXP 4\n");
-        char *t1 = new_tmp();
         node *exp1_node = exp_node->children->next->c;
+        if (exp1_node->child_num == 1)
+        { // Exp1 -> ID / INT / FLOAT
+            char *ret = (char *)malloc(sizeof(char) * 128);
+            sprintf(ret, "%s := #0 - %s", place, strstr(exp1_node->code, ":") + 2);
+            return ret;
+        }
+        char *t1 = new_tmp();
         char *code1 = translate_EXP(exp1_node, t1);
         char *code2 = (char *)malloc(sizeof(char) * 128);
         sprintf(code2, "%s := #0 - %s", place, t1);

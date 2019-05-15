@@ -9,6 +9,8 @@ int main()
 {
     int m, result;
     m = read();
+    m = m + 2;
+    m = m - 2;
     if (m > 1)
         result = fact(m);
     else
