@@ -1,39 +1,27 @@
 FUNCTION fact :
 PARAM n
-iamt0 := n
-iamt1 := #1
-IF iamt0  == iamt1 GOTO iamlabel0
-GOTO iamlabel1
-LABEL iamlabel0 :
-iamt2 := n
-RETURN iamt2
+IF n  == #1 GOTO iamlabel0
+iamt2 := n - #1
+ARG iamt2
+iamt1 := CALL fact
+iamt0 :=  n * iamt1
+RETURN iamt0
 GOTO iamlabel2
-LABEL iamlabel1 :
-iamt5 := n - #1
-ARG iamt5
-iamt4 := CALL fact
-iamt3 :=  n * iamt4
-RETURN iamt3
+LABEL iamlabel0 :
+RETURN n
 LABEL iamlabel2 :
 
 FUNCTION main :
 READ m
-m := m + #2
-m := m - #2
-iamt6 := m
-iamt7 := #1
-IF iamt6  > iamt7 GOTO iamlabel3
-GOTO iamlabel4
-LABEL iamlabel3 :
-iamt8 := m
-ARG iamt8
-result := CALL fact
-GOTO iamlabel5
-LABEL iamlabel4 :
+IF m  > #1 GOTO iamlabel3
 result := #1
+GOTO iamlabel5
+LABEL iamlabel3 :
+
+ARG m
+result := CALL fact
 LABEL iamlabel5 :
-iamt9 := result
-WRITE iamt9
-iamt10 := #0
-RETURN iamt10
+
+WRITE result
+RETURN #0
 

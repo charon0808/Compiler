@@ -20,8 +20,7 @@ RETURN iamt3
 LABEL iamlabel2 :
 
 FUNCTION main :
-READ iamt9
-m := iamt9
+READ m
 iamt10 := m
 iamt11 := #1
 IF iamt10  > iamt11 GOTO iamlabel3

@@ -1,12 +1,12 @@
 int a()
 {
-    return (3*4)+12;
+    return (3 * 4) + 12;
 }
 
-int b(int c,int d,int e)
+int b(int c, int d, int e)
 {
     int f;
-    f=a()+d*e+a();
+    f = a() + d * e + a();
     return f;
 }
 
@@ -16,10 +16,11 @@ int main()
     int h;
     int i;
     int j;
-    h=read();
-    i=read();
-    j=read();
-    g=b(h,i,j);
+    h = read();
+    i = read();
+    j = read();
+    if (j > 3)
+        g = b(h, i, j);
     write(g);
     return 1;
 }

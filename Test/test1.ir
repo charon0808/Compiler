@@ -1,30 +1,18 @@
 FUNCTION main :
-READ iamt0
-n := iamt0
-iamt1 := n
-iamt2 := #0
-IF iamt1  > iamt2 GOTO iamlabel0
-GOTO iamlabel1
-LABEL iamlabel0 :
-iamt3 := #1
-WRITE iamt3
-GOTO iamlabel2
-LABEL iamlabel1 :
-iamt4 := n
-iamt5 := #0
-IF iamt4  < iamt5 GOTO iamlabel3
-GOTO iamlabel4
-LABEL iamlabel3 :
-iamt7 := #1
-iamt6 := #0 - iamt7
-WRITE iamt6
+READ n
+IF n  > #0 GOTO iamlabel0
+IF n  < #0 GOTO iamlabel3
+
+WRITE #0
 GOTO iamlabel5
-LABEL iamlabel4 :
-iamt8 := #0
-WRITE iamt8
+LABEL iamlabel3 :
+iamt0 := #0 - #1
+WRITE iamt0
 LABEL iamlabel5 :
+GOTO iamlabel2
+LABEL iamlabel0 :
+
+WRITE #1
 LABEL iamlabel2 :
-iamt9 := iamt1 * iamt7
-WRITE iamt9
-RETURN iamt9
+RETURN #0
 
