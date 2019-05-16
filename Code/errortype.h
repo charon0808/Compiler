@@ -416,7 +416,7 @@ static void func(node *root)
                     print_error(redefined_field, root->lineno, root->children->c->code + 4, NULL);
                     is_redeffield_not_redefvar = 1;
                 }
-                add_struct_fields(root->children->c->code, struct_type, st);
+                add_struct_fields(root->children->c->code+4, struct_type, st);
             }
         }
 
@@ -1042,6 +1042,7 @@ static struct_typedef *find_struct_by_id(int struct_id)
 
 static int add_struct_fields(char *name, int type, struct_typedef *struct_node)
 {
+    printf("in add struct fields, name=%s, struct name=%s\n", name, struct_node->symbol_name);
     field_list *_start = struct_node->name_list;
     while (_start != NULL && _start->next != NULL)
     {

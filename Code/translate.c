@@ -293,6 +293,70 @@ char *translate_EXP(node *exp_node, char *place)
     { // Exp -> LP Exp1 RP
         return translate_EXP(exp_node->children->next->c, place);
     }
+    else if (exp_node->child_num == 3 && strcmp(exp_node->children->next->c->code, "DOT") == 0)
+    { // Exp -> Exp1 DOT ID
+        node *exp1_node = exp_node->children->c;
+        node *ID_node = exp_node->children->next->next->c;
+        struct_typedef *st = find_struct(exp1_node->code + 4);
+        if (st == NULL)
+        {
+            printf("error, struct %s not found!!!\n", exp_node->code + 4);
+            exit(-1);
+        }
+        field_list *struct_name_list = st->name_list;
+        int start_loc;
+        int var_size;
+        while (struct_name_list != NULL)
+        {
+            if (strcmp(struct_name_list->symbol_name, ID_node->code + 4) == 0)
+            {
+                start_loc = struct_name_list->start_location;
+                var_size = struct_name_list->size;
+            }
+            struct_name_list = struct_name_list->next;
+        }
+        if (struct_name_list == NULL)
+        {
+            printf("error, struct field %s not found!!!\n", ID_node->code + 4);
+            exit(-1);
+        }
+
+        char *t1;
+        char *code1 = NULL;
+        if (exp1_node->child_num == 1)
+        {
+            if (strstr(exp1_node->code, "ID:") != NULL)
+            {
+                t1 = strdup(exp1_node->code + 4);
+            }
+            else
+            {
+                printf("error, invalid struct exp %s!!!\n", exp1_node->code + 4);
+                exit(-1);
+            }
+        }
+        else
+        {
+            t1 = new_tmp();
+            code1 = translate_EXP(exp1_node, t1);
+        }
+        if (code1 == NULL)
+        {
+            char *ret = (char *)malloc(sizeof(char) * 128);
+            sprintf(ret, "%s := %s + #%d", place, t1, start_loc);
+            // free(t1);
+            return ret;
+        }
+        else
+        {
+            char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
+            sprintf(ret, "%s\n%s := %s + #%d", code1, place, t1 , start_loc);
+            // free(t1);
+            // free(code1);
+            return ret;
+        }
+    }
+
     // printf("???tree=\n");
     // print_tree(exp_node, 0);
     // printf("translate_EXP ???\n");
@@ -483,9 +547,9 @@ char *translate_COND(node *cond_node, char *lable_true, char *label_false)
         {
             char *ret = (char *)malloc(sizeof(char) * (256));
             if (code1 != NULL)
-                sprintf(ret, "%sIF %s GOTO %s", code1, relop_code, lable_true, label_false);
+                sprintf(ret, "%sIF %s GOTO %s", code1, relop_code, lable_true);
             else
-                sprintf(ret, "IF %s GOTO %s", relop_code, lable_true, label_false);
+                sprintf(ret, "IF %s GOTO %s", relop_code, lable_true);
             // free(code1);
             // free(relop_code);
             return ret;
