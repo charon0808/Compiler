@@ -1,6 +1,6 @@
 FUNCTION a :
 iamt1 := #3 * #4
-iamt0 := iamt1 op  12
+iamt0 := iamt1 + #12
 RETURN iamt0
 
 FUNCTION b :
@@ -8,9 +8,9 @@ PARAM c
 PARAM d
 PARAM e
 iamt4 := CALL a
-iamt2 := iamt4 op  d
+iamt2 := iamt4 + d
 iamt5 := CALL a
-iamt3 :=  e + iamt5
+iamt3 := e + iamt5
 f := iamt2 * iamt3
 RETURN f
 

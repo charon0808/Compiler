@@ -160,7 +160,10 @@ char *translate_EXP(node *exp_node, char *place)
                 char *t1 = new_tmp();
                 char *code1 = translate_EXP(exp2_node, t1);
                 char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
-                sprintf(ret, "%s\n%s := %s %c %s", code1, place, strstr(exp1_node->children->c->code, ":") + 1, op, t1);
+                if (strstr(exp1_node->children->c->code, "ID:") != NULL)
+                    sprintf(ret, "%s\n%s := %s %c %s", code1, place, strstr(exp1_node->children->c->code, ":") + 2, op, t1);
+                else
+                    sprintf(ret, "%s\n%s := %s %c #%s", code1, place, strstr(exp1_node->children->c->code, ":") + 2, op, t1);
                 // free(t1);
                 // free(code1);
                 return ret;
@@ -170,7 +173,10 @@ char *translate_EXP(node *exp_node, char *place)
                 char *t1 = new_tmp();
                 char *code1 = translate_EXP(exp1_node, t1);
                 char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 64));
-                sprintf(ret, "%s\n%s := %s op %s", code1, place, t1, strstr(exp2_node->children->c->code, ":") + 1);
+                if (strstr(exp2_node->children->c->code, "ID:") != NULL)
+                    sprintf(ret, "%s\n%s := %s %c %s", code1, place, t1, op, strstr(exp2_node->children->c->code, ":") + 2);
+                else
+                    sprintf(ret, "%s\n%s := %s %c #%s", code1, place, t1, op, strstr(exp2_node->children->c->code, ":") + 2);
                 // free(t1);
                 // free(code1);
                 return ret;

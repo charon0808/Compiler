@@ -4,7 +4,7 @@ IF n  == #1 GOTO iamlabel0
 iamt2 := n - #1
 ARG iamt2
 iamt1 := CALL fact
-iamt0 :=  n * iamt1
+iamt0 := n * iamt1
 RETURN iamt0
 GOTO iamlabel2
 LABEL iamlabel0 :

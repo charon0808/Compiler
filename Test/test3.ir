@@ -3,47 +3,41 @@ PARAM a
 PARAM b
 b := b + #1
 IF a  == #0 GOTO iamlabel0
-GOTO iamlabel1
-LABEL iamlabel0 :
-iamt0 := #1
-RETURN iamt0
-GOTO iamlabel2
-LABEL iamlabel1 :
 IF a  == #1 GOTO iamlabel3
-GOTO iamlabel4
-LABEL iamlabel3 :
-iamt1 := #1
-RETURN iamt1
-GOTO iamlabel5
-LABEL iamlabel4 :
-iamt5 := a - #1
+iamt3 := a - #1
 
 ARG #3
-ARG iamt5
-iamt3 := CALL fib
-iamt6 := a - #2
+ARG iamt3
+iamt1 := CALL fib
+iamt4 := a - #2
 
 ARG b
-ARG iamt6
-iamt4 := CALL fib
-iamt2 := iamt3 + iamt4
-RETURN iamt2
+ARG iamt4
+iamt2 := CALL fib
+iamt0 := iamt1 + iamt2
+RETURN iamt0
 
+GOTO iamlabel5
+LABEL iamlabel3 :
+RETURN #1
 LABEL iamlabel5 :
+GOTO iamlabel2
+LABEL iamlabel0 :
+RETURN #1
 LABEL iamlabel2 :
 
-iamt10 := a - #1
+iamt8 := a - #1
 
 ARG #3
-ARG iamt10
-iamt8 := CALL fib
-iamt11 := a - #2
+ARG iamt8
+iamt6 := CALL fib
+iamt9 := a - #2
 
 ARG b
-ARG iamt11
-iamt9 := CALL fib
-iamt7 := iamt8 + iamt9
-RETURN iamt7
+ARG iamt9
+iamt7 := CALL fib
+iamt5 := iamt6 + iamt7
+RETURN iamt5
 
 FUNCTION main :
 READ n
@@ -51,8 +45,7 @@ READ n
 
 ARG #4
 ARG n
-iamt12 := CALL fib
-WRITE iamt12
-iamt13 := #0
-RETURN iamt13
+iamt10 := CALL fib
+WRITE iamt10
+RETURN #0
 
