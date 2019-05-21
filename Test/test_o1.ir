@@ -1,0 +1,17 @@
+FUNCTION add :
+PARAM temp
+iamt1 :=  + #0
+iamt2 :=  + #4
+iamt0 := iamt1 + iamt2
+RETURN iamt0
+
+FUNCTION main :
+(null) := *op
+iamt3 := op + #4
+
+ARG op
+n := CALL add
+
+WRITE n
+RETURN #0
+

@@ -7,7 +7,7 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
-//#define DEBUG
+// #define DEBUG
 
 #define Program 0
 #define ExtDefList 1
@@ -169,6 +169,7 @@ static struct_typedef *find_struct(char *);
 static struct_typedef *find_struct_by_id(int);
 static int is_in_struct_field(char *, struct_typedef *);
 static int is_field_in_struct(char *, int);
+static field_list *find_field_in_struct(struct_typedef *, char *);
 static void init();
 
 static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var table, 1 for fun*/, node *_node, int type, int dimension, int *aw)
@@ -257,7 +258,7 @@ static int add_func_varlist(char *func_name, int type)
 static int add_struct_typedef(char *struct_name, node *root)
 {
     //#ifdef DEBUG
-    //printf("In add_struct_typedef, struct_name=%s\n", struct_name);
+    printf("In add_struct_typedef, struct_name=%s\n", struct_name);
     //#endif
     struct_typedef *_start = _struct_typedef_table_start;
     while (_start != NULL && _start->next != NULL)
@@ -383,6 +384,7 @@ static void func(node *root)
         int is_in_struct_fields_flag = 0;
         int struct_type;
         int is_redeffield_not_redefvar = 0;
+        struct_typedef *st;
         if (root->child_num == 1)
         {
             /*
@@ -407,7 +409,7 @@ static void func(node *root)
                     is_in_struct_fields_flag = 0;
                     break;
                 }
-                struct_typedef *st = find_struct_by_id(struct_type);
+                st = find_struct_by_id(struct_type);
 #ifdef DEBUG
                 printf("in varDec -> ID, struct_name:%s, type=%d\n", st->symbol_name, struct_type);
 #endif
@@ -416,7 +418,6 @@ static void func(node *root)
                     print_error(redefined_field, root->lineno, root->children->c->code + 4, NULL);
                     is_redeffield_not_redefvar = 1;
                 }
-                add_struct_fields(root->children->c->code+4, struct_type, st);
             }
         }
 
@@ -479,6 +480,10 @@ static void func(node *root)
                 }
                 this_type = type;
             }
+            if (is_in_struct_fields_flag)
+            {
+                add_struct_fields(root->children->c->code + 4, this_type, st);
+            }
         }
 
         break;
@@ -524,8 +529,9 @@ static void func(node *root)
     {
         if (strcmp(root->parent->code, "DefList") == 0)
             break;
-        int struct_type = root->parent->struct_type;
-        struct_typedef *st = find_struct_by_id(struct_type);
+        //int struct_type = root->parent->struct_type;
+        //printf("33, %d\n", struct_type);
+        //struct_typedef *st = find_struct_by_id(struct_type);
         break;
     }
     case StmtList:
@@ -694,11 +700,12 @@ static void func(node *root)
             int type;
             if ((type = find_exp_type(root->children->c)) < TYPE_struct)
                 print_error(illegal_use_of_dot, root->lineno, NULL, NULL);
-            //#ifdef DEBUG
-            //printf("int Exp DOT ID, %s.type=%d\n", root->children->c->code, type);
-            //#endif
+#ifdef DEBUG
+            printf("int Exp DOT ID, %s.type=%d\n", root->children->c->code, type);
+#endif
             struct_typedef *st = find_struct_by_id(type);
-            if (!is_in_struct_field(root->children->next->next->c->code, st))
+            // printf("\n\nname:%s, struct_name:%s\n\n\n", root->children->next->next->c->code, st->symbol_name);
+            if (!is_in_struct_field(root->children->next->next->c->code + 4, st))
             {
                 print_error(not_exist_field, root->lineno, root->children->next->next->c->code + 4, NULL);
             }
@@ -1028,21 +1035,30 @@ static struct_typedef *find_struct(char *struct_name)
 
 static struct_typedef *find_struct_by_id(int struct_id)
 {
+#ifdef DEBUG
+    printf("int find_struct_by_id, struct_id=%d\n", struct_id);
+#endif
     struct_typedef *_start = _struct_typedef_table_start;
-    int times = struct_id - TYPE_struct - 1;
+    int times = struct_id - TYPE_struct;
     while (_start != NULL && times)
     {
-        _start = _start->next;
-        if (_start == NULL)
-            return NULL;
+#ifdef DEBUG
+        printf("_start->name=%s, times=%d\n", _start->symbol_name, times);
+#endif
         times--;
+        if (!times)
+            return _start;
+        _start = _start->next;
     }
+#ifdef DEBUG
+    printf("int find_struct_by_id, struct name=%s\n", _start->symbol_name);
+#endif
     return _start;
 }
 
 static int add_struct_fields(char *name, int type, struct_typedef *struct_node)
 {
-    printf("in add struct fields, name=%s, struct name=%s\n", name, struct_node->symbol_name);
+    printf("in add struct fields, name=%s, type=%d, struct name=%s\n", name, type, struct_node->symbol_name);
     field_list *_start = struct_node->name_list;
     while (_start != NULL && _start->next != NULL)
     {
@@ -1058,29 +1074,32 @@ static int add_struct_fields(char *name, int type, struct_typedef *struct_node)
         _start->next = (field_list *)malloc(sizeof(field_list));
         _start = _start->next;
     }
+    _start->symbol_name = strdup(name);
+    _start->type = type;
+    _start->next = NULL;
     int sl = 0;
     field_list *tmp = struct_node->name_list;
     while (tmp != _start)
     {
+        printf("tmp %s %d\n", tmp->symbol_name, tmp->type);
         if (tmp->type == TYPE_int || tmp->type == TYPE_float)
             sl += 4;
         else if (tmp->type >= TYPE_struct)
         {
-            struct_typedef *st = find_struct_by_id(tmp->type);
+            printf("?\n");
+            struct_typedef *st = find_struct_by_id(type);
             sl += st->total_size;
         }
+        tmp = tmp->next;
     }
     _start->start_location = sl;
     if (type == TYPE_int || type == TYPE_float)
         _start->size = 4;
     else if (type >= TYPE_struct)
     {
-        struct_typedef *st = find_struct_by_id(tmp->type);
+        struct_typedef *st = find_struct_by_id(type);
         _start->size = st->total_size;
     }
-    _start->symbol_name = strdup(name);
-    _start->type = type;
-    _start->next = NULL;
     struct_node->total_size = _start->start_location + _start->size;
     return 1;
 }
@@ -1106,6 +1125,7 @@ static int is_in_struct_field(char *name, struct_typedef *struct_node)
 
 static int is_field_in_struct(char *field_name, int struct_type_id)
 {
+    printf("32, %d\n", struct_type_id);
     struct_typedef *st = find_struct_by_id(struct_type_id);
     if (st == NULL)
     {
@@ -1120,6 +1140,20 @@ static int is_field_in_struct(char *field_name, int struct_type_id)
         _start = _start->next;
     }
     return 0;
+}
+
+static field_list *find_field_in_struct(struct_typedef *st, char *field_name)
+{
+    field_list *name_list = st->name_list;
+    while (name_list != NULL)
+    {
+        if (strcmp(name_list->symbol_name, field_name) == 0)
+        {
+            return name_list;
+        }
+        name_list = name_list->next;
+    }
+    return NULL;
 }
 
 #define _ERRORTYPE_H_

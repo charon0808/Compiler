@@ -47,11 +47,11 @@
 %right <val> ASSIGNOP
 %left  <val> LT LE EQ NE GT GE
 %right <val> NOT
-%left  <val> DOT
 %left  <val> LP RP LB RB 
 %left  <val> LC RC
 %left  <val> STAR DIV AND OR 
 %left  <val> PLUS MINUS
+%left  <val> DOT
 %token <val> STRUCT RETURN
 %token <val> IF ELSE WHILE
 %token <val> TYPE
