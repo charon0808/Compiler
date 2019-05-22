@@ -1,4 +1,0 @@
-FUNCTION main :
-iamt0 := #1
-RETURN iamt0
-
