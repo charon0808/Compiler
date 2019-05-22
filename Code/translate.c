@@ -99,9 +99,7 @@ char *translate_EXP(node *exp_node, char *place)
             else if (exp1_node->child_num == 3 && strcmp(exp1_node->children->next->c->code, "DOT") == 0)
             { // Exp1 -> Exp11 DOT ID
                 // Exp11 -> ID
-                printf("\n\n\n");
                 print_tree(exp1_node, 1);
-                printf("\n\n\n");
                 char *struct_id = exp1_node->children->c->children->c->code + 4;
                 symbol_list *sl = is_in_symbol_table(struct_id, 0);
                 struct_typedef *st = find_struct_by_id(sl->type);
@@ -120,8 +118,10 @@ char *translate_EXP(node *exp_node, char *place)
                     char *code1 = (char *)malloc(sizeof(char) * 128);
                     sprintf(code1, "%s := %s + #%d", t1, struct_id, sll);
                     char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
+                    if (place!=NULL)
                     sprintf(ret, "%s\n%s := *%s", code1, place, t1);
-                    printf("hah:%s\n\n",ret);
+                    else sprintf(ret, "%s\n*%s", code1, place, t1);
+                    // printf("hah:\n%s\n\n",ret);
                     // free(t1);
                     // free(code1);
                     return ret;
