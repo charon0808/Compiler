@@ -1,15 +1,22 @@
 FUNCTION add :
 PARAM temp
-iamt1 :=  + #0
-iamt2 :=  + #4
+iamt1 := *temp
+iamt3 := temp + #4
+iamt2 := *iamt3
 iamt0 := iamt1 + iamt2
 RETURN iamt0
 
 FUNCTION main :
-(null) := *op
-iamt3 := op + #4
+DEC op 8
+a := #100 + #3
+b := #10
+iamt5 := &op
+iamt4 := a + b
+*iamt5 := iamt4
+iamt6 := &op + #4
+*iamt6 := #2
 
-ARG op
+ARG &op
 n := CALL add
 
 WRITE n

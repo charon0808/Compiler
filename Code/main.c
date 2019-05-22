@@ -133,9 +133,34 @@ void yyerror(const char *s)
     //yyparse();
 }
 
+char *last_one = NULL;
 void write_file(char *s)
 {
-    fprintf(output_file, "%s\n", s);
+    printf("%s\n", s);
+    if (last_one != NULL)
+    {
+        if (strstr(s, "DEC") != NULL)
+        {
+            fprintf(output_file, "%s\n", s);
+            fprintf(output_file, "%s\n", last_one);
+            // printf("%s\n", s);
+            // printf("%s\n", last_one);
+            printf("hah\n\n");
+            last_one = NULL;
+        }
+        else
+        {
+            fprintf(output_file, "%s\n", last_one);
+            //fprintf(output_file, "%s\n", s);
+            last_one = s;
+            //printf("%s\n", last_one);
+            // printf("%s\n", s);
+        }
+    }
+    else
+    {
+        last_one = s;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -149,12 +174,14 @@ int main(int argc, char *argv[])
         }
         cat = (char *)malloc(sizeof(char) * 64);
         output_file = fopen(argv[2], "w+");
-        if (output_file==NULL)
+        if (output_file == NULL)
         {
             perror(argv[2]);
             return -1;
         }
         yyparse();
+        if (last_one != NULL)
+            fprintf(output_file, "%s\n", last_one);
     }
     else
     {

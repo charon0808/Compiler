@@ -13,6 +13,7 @@ char *translate_COND(node *, char *, char *);
 char *translate_COMPST(node *);
 char *translate_ARGS(node *, args_list *);
 char *translate_STMTLIST(node *);
+char *translate_VARDEC_STRUCTSPECIFIER(node *, node *);
 char *args_list_2_string(args_list *, char *);
 char *translate_FUNDEC(node *);
 void translate(node *);
@@ -38,8 +39,9 @@ char *new_label()
 
 char *translate_EXP(node *exp_node, char *place)
 {
-    // printf("in translate_exp, tree=\n");
-    // print_tree(exp_node,0);
+    printf("in translate_exp, tree=\n");
+    print_tree(exp_node, 0);
+    printf("\n\n\n");
     // printf("place=%s\n",place);
     if (exp_node->child_num == 1)
     {
@@ -64,12 +66,27 @@ char *translate_EXP(node *exp_node, char *place)
     else if (exp_node->child_num >= 2)
     {
         // printf("translate_EXP 2212\n");
+        // print_tree(exp_node, 1);
         if (strcmp(exp_node->children->next->c->code, "ASSIGNOP") == 0)
         { // Exp1 ASSIGNOP Exp2
             // printf("translate_EXP 2.3\n");
             node *exp1_node = exp_node->children->c;
             node *exp2_node = exp_node->children->next->next->c;
-            if (strstr(exp1_node->children->c->code, "ID:") != NULL)
+            if (exp1_node->child_num == 1 && strstr(exp1_node->children->c->code, "ID:") != NULL &&
+                exp2_node->child_num == 1)
+            {
+                char *ret = (char *)malloc(sizeof(char) * 128);
+                if (strstr(exp2_node->children->c->code, "ID:") != NULL)
+                {
+                    sprintf(ret, "%s := %s", exp1_node->children->c->code + 4, exp2_node->children->c->code + 4);
+                }
+                else
+                {
+                    sprintf(ret, "%s := #%s", exp1_node->children->c->code + 4, strstr(exp2_node->children->c->code, ":") + 2);
+                }
+                return ret;
+            }
+            if (exp1_node->child_num == 1 && strstr(exp1_node->children->c->code, "ID:") != NULL)
             { // Exp1 -> ID
                 node *ID_node = exp1_node->children->c;
                 symbol_list *sl = is_in_symbol_table(ID_node->code + 4, 0);
@@ -77,6 +94,7 @@ char *translate_EXP(node *exp_node, char *place)
                 {
                     // TODO: symbol not found error
                     printf("not in symbol_table!!!\n");
+                    exit(-1);
                 }
                 // char *t1 = new_tmp();
                 char *t1 = (char *)malloc(sizeof(char) * 64);
@@ -84,48 +102,74 @@ char *translate_EXP(node *exp_node, char *place)
                 // printf("t1=%s\n",t1);
                 char *code1 = translate_EXP(exp2_node, t1);
                 return code1;
-
-                /*char *code2 = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
-                // printf("\n\ncode1=%s\n\ncode2=%s\n\n\n", code1, code2);
-                sprintf(code2, "%s := %s\n%s := %s", sl->symbol_name, t1, place, sl->symbol_name);
-                // printf("translate_EXP 1.2\n");
-                char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
-                sprintf(ret, "%s\n%s", code1, code2);
-                // free(t1);
-                // free(code1);
-                // free(code2);
-                return ret;*/
             }
             else if (exp1_node->child_num == 3 && strcmp(exp1_node->children->next->c->code, "DOT") == 0)
-            { // Exp1 -> Exp11 DOT ID
-                // Exp11 -> ID
-                print_tree(exp1_node, 1);
+            { // Exp1 -> Exp12 DOT ID
+                // Exp12 -> ID
+                printf("1\n");
+                char *code2;
+                char *t1 = NULL;
+                if (exp2_node->child_num != 1)
+                {
+                    t1 = new_tmp();
+                    code2 = translate_EXP(exp2_node, t1);
+                }
+                else
+                {
+                    if (strstr(exp2_node->children->c->code, "ID") != NULL)
+                    {
+                        code2 = strdup(exp2_node->children->c->code + 4);
+                    }
+                    else
+                    {
+                        code2 = (char *)malloc(sizeof(char) * 128);
+                        sprintf(code2, "#%s", strstr(exp2_node->children->c->code, ":") + 2);
+                    }
+                }
                 char *struct_id = exp1_node->children->c->children->c->code + 4;
                 symbol_list *sl = is_in_symbol_table(struct_id, 0);
                 struct_typedef *st = find_struct_by_id(sl->type);
-                char *id = exp1_node->children->next->next->c->code + 4;
-                field_list *fl = find_field_in_struct(st, id);
-                int sll = fl->start_location;
-                if (sll == 0)
+                if (st == NULL)
                 {
-                    char *ret = (char *)malloc(sizeof(char) * 128);
-                    sprintf(ret, "%s := *%s", place, struct_id);
+                    printf("error, struct: %s not found!!!\n", struct_id);
+                    exit(-1);
+                }
+                char *field_name = exp1_node->children->next->next->c->code + 4;
+                field_list *fl = find_field_in_struct(st, field_name);
+                if (fl == NULL)
+                {
+                    printf("error, field: %s not found in struct: %s!!!\n", field_name, st->symbol_name);
+                    exit(-1);
+                }
+                char *ret;
+                if (fl->start_location == 0)
+                {
+                    ret = (char *)malloc(sizeof(char) * (strlen(code2) + 128));
+                    char *t2 = new_tmp();
+                    if (t1 == NULL)
+                        sprintf(ret, "%s := &%s\n*%s := %s", t2, struct_id, t2, code2);
+                    else
+                    {
+                        sprintf(ret, "%s := &%s\n%s\n*%s := %s", t2, struct_id, code2, t2, t1);
+                    }
+                    // free(code2);
                     return ret;
                 }
                 else
                 {
-                    char *t1 = new_tmp();
-                    char *code1 = (char *)malloc(sizeof(char) * 128);
-                    sprintf(code1, "%s := %s + #%d", t1, struct_id, sll);
-                    char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
-                    if (place!=NULL)
-                    sprintf(ret, "%s\n%s := *%s", code1, place, t1);
-                    else sprintf(ret, "%s\n*%s", code1, place, t1);
-                    // printf("hah:\n%s\n\n",ret);
-                    // free(t1);
-                    // free(code1);
+                    ret = (char *)malloc(sizeof(char) * (strlen(code2) + 128));
+                    char *t2 = new_tmp();
+                    if (t1 == NULL)
+                        sprintf(ret, "%s := &%s + #%d\n*%s := %s", t2, struct_id, fl->start_location, t2, code2);
+                    else
+                    {
+                        sprintf(ret, "%s := &%s + #%d\n%s\n*%s := %s", t2, struct_id, fl->start_location, code2, t2, t1);
+                    }
+                    // free(code2);
                     return ret;
                 }
+                // free(t1);
+                return "tmppppp\n";
             }
             else
             {
@@ -326,71 +370,27 @@ char *translate_EXP(node *exp_node, char *place)
     }
     else if (exp_node->child_num == 3 && strcmp(exp_node->children->next->c->code, "DOT") == 0)
     { // Exp -> Exp1 DOT ID
-        printf("\n\n\n");
-        print_tree(exp_node, 0);
-        printf("\n\n\n");
         node *exp1_node = exp_node->children->c;
-        node *ID_node = exp_node->children->next->next->c;
-        symbol_list *sl = is_in_symbol_table(exp1_node->children->c->code + 4, 0);
+        char *struct_id = exp1_node->children->c->code + 4;
+        symbol_list *sl = is_in_symbol_table(struct_id, 0);
         struct_typedef *st = find_struct_by_id(sl->type);
-        printf("\n\n\n");
-        printf("struct name:%s", st->symbol_name);
-        printf("\n\n\n");
-        if (st == NULL)
-        {
-            printf("error, struct %s not found!!!\n", exp_node->code + 4);
-            exit(-1);
-        }
-        field_list *struct_name_list = st->name_list;
-        int start_loc;
-        int var_size;
-        while (struct_name_list != NULL)
-        {
-            if (strcmp(struct_name_list->symbol_name, ID_node->code + 4) == 0)
-            {
-                start_loc = struct_name_list->start_location;
-                var_size = struct_name_list->size;
-                break;
-            }
-            struct_name_list = struct_name_list->next;
-        }
-        if (struct_name_list == NULL)
-        {
-            printf("error, struct field %s not found!!!\n", ID_node->code + 4);
-            exit(-1);
-        }
-
-        char *t1;
-        char *code1 = NULL;
-        if (exp1_node->child_num == 1)
-        {
-            // print_tree(exp1_node, 0);
-            if (strstr(exp1_node->children->c->code, "ID:") != NULL)
-            {
-                t1 = strdup(exp1_node->code + 4);
-            }
-            else
-            {
-                printf("error, invalid struct exp %s!!!\n", exp1_node->code + 4);
-                exit(-1);
-            }
-        }
-        else
-        {
-            t1 = new_tmp();
-            code1 = translate_EXP(exp1_node, t1);
-        }
-        if (code1 == NULL)
+        char *id = exp_node->children->next->next->c->code + 4;
+        field_list *fl = find_field_in_struct(st, id);
+        int sll = fl->start_location;
+        if (sll == 0)
         {
             char *ret = (char *)malloc(sizeof(char) * 128);
-            sprintf(ret, "%s := %s + #%d", place, t1, start_loc);
-            // free(t1);
+            sprintf(ret, "%s := *%s", place, struct_id);
             return ret;
         }
         else
         {
+            char *t1 = new_tmp();
+            char *code1 = (char *)malloc(sizeof(char) * 128);
+            sprintf(code1, "%s := %s + #%d", t1, struct_id, sll);
             char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
-            sprintf(ret, "%s\n%s := %s + #%d", code1, place, t1, start_loc);
+            sprintf(ret, "%s\n%s := *%s", code1, place, t1);
+            // printf("hah:\n%s\n\n",ret);
             // free(t1);
             // free(code1);
             return ret;
@@ -806,6 +806,29 @@ char *translate_FUNDEC(node *funcdec_node)
     }
 }
 
+char *translate_VARDEC_STRUCTSPECIFIER(node *vardec_node, node *structspecifier_node)
+{ // VarDec -> ID  // struct
+    if (structspecifier_node->child_num == 5)
+    { // StructSpecifier -> STRUCT OptTag LC DefList RC
+        // TODO:
+        printf("TODO in t_V_S\n");
+        exit(-1);
+    }
+    else
+    { // StructSpecifier -> STRUCT Tag
+        node *tag_node = structspecifier_node->children->next->c;
+        struct_typedef *st = find_struct(tag_node->children->c->code + 4);
+        if (st == NULL)
+        {
+            printf("error, struct: %s not found!!!\n", tag_node->children->c->code + 4);
+            exit(-1);
+        }
+        char *ret = (char *)malloc(sizeof(char) * 128);
+        sprintf(ret, "DEC %s %d", vardec_node->children->c->code + 4, st->total_size);
+        return ret;
+    }
+}
+
 void translate(node *root)
 {
     // printf("in hah\n");
@@ -814,15 +837,37 @@ void translate(node *root)
     case FunDec:
     {
         char *o = translate_FUNDEC(root);
-        printf("%s\n", o);
         write_file(o);
         break;
     }
     case CompSt:
     {
         char *oo = translate_COMPST(root);
-        printf("%s\n", oo);
         write_file(oo);
+        break;
+    }
+    case VarDec:
+    {
+        if (root->child_num != 1)
+            break;
+        node *tmp = root;
+        while (tmp != NULL && strcmp(tmp->code, "ParamDec") != 0 && strcmp(tmp->code, "ExtDef") != 0 && strcmp(tmp->code, "Def") != 0)
+        {
+            tmp = tmp->parent;
+        }
+        if (strcmp(tmp->code, "ParamDec") == 0)
+            break;
+        if (tmp == NULL)
+        {
+            printf("error in translate_V_S\n");
+            exit(-1);
+        }
+        node *specifier_node = tmp->children->c;
+        if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
+        {
+            char *ooo = translate_VARDEC_STRUCTSPECIFIER(root, specifier_node->children->c);
+            write_file(ooo);
+        }
         break;
     }
     }
@@ -843,7 +888,11 @@ char *args_list_2_string(args_list *al, char *s)
     if (al != NULL)
     {
         args_list_2_string(al->next, s);
-        strcat(s, "ARG ");
+        symbol_list *sl = is_in_symbol_table(al->symbol_name, 0);
+        if (sl != NULL && sl->type >= TYPE_struct)
+            strcat(s, "ARG &");
+        else
+            strcat(s, "ARG ");
         strcat(s, al->symbol_name);
         strcat(s, "\n");
     }
