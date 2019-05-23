@@ -1,5 +1,6 @@
 FUNCTION fact :
 PARAM n
+
 IF n  == #1 GOTO iamlabel0
 iamt2 := n - #1
 ARG iamt2
@@ -12,6 +13,7 @@ RETURN n
 LABEL iamlabel2 :
 
 FUNCTION main :
+
 READ m
 IF m  > #1 GOTO iamlabel3
 result := #1

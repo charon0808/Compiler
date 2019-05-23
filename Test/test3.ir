@@ -1,9 +1,11 @@
 FUNCTION fib :
 PARAM a
 PARAM b
+
 b := b + #1
 IF a  == #0 GOTO iamlabel0
 IF a  == #1 GOTO iamlabel3
+
 iamt3 := a - #1
 
 ARG #3
@@ -26,6 +28,7 @@ LABEL iamlabel0 :
 RETURN #1
 LABEL iamlabel2 :
 
+
 iamt8 := a - #1
 
 ARG #3
@@ -40,6 +43,7 @@ iamt5 := iamt6 + iamt7
 RETURN iamt5
 
 FUNCTION main :
+
 READ n
 
 

@@ -1,4 +1,5 @@
 FUNCTION a :
+
 iamt1 := #3 * #4
 iamt0 := iamt1 + #12
 RETURN iamt0
@@ -7,14 +8,16 @@ FUNCTION b :
 PARAM c
 PARAM d
 PARAM e
+
 iamt4 := CALL a
-iamt2 := iamt4 + d
-iamt5 := CALL a
-iamt3 := e + iamt5
-f := iamt2 * iamt3
+iamt5 := d * e
+iamt2 := iamt4 + iamt5
+iamt3 := CALL a
+f := iamt2 + iamt3
 RETURN f
 
 FUNCTION main :
+
 READ h
 READ i
 READ j

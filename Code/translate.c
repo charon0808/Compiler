@@ -16,6 +16,8 @@ char *translate_STMTLIST(node *);
 char *translate_VARDEC_STRUCTSPECIFIER(node *, node *);
 char *args_list_2_string(args_list *, char *);
 char *translate_FUNDEC(node *);
+char *translate_DEFLIST(node *, char *);
+char *translate_DEC(node *);
 void translate(node *);
 int tmp_count = 0;
 int label_count = 0;
@@ -39,9 +41,9 @@ char *new_label()
 
 char *translate_EXP(node *exp_node, char *place)
 {
-    printf("in translate_exp, tree=\n");
-    print_tree(exp_node, 0);
-    printf("\n\n\n");
+    // printf("in translate_exp, tree=\n");
+    // print_tree(exp_node, 0);
+    // printf("\n\n\n");
     // printf("place=%s\n",place);
     if (exp_node->child_num == 1)
     {
@@ -106,7 +108,6 @@ char *translate_EXP(node *exp_node, char *place)
             else if (exp1_node->child_num == 3 && strcmp(exp1_node->children->next->c->code, "DOT") == 0)
             { // Exp1 -> Exp12 DOT ID
                 // Exp12 -> ID
-                printf("1\n");
                 char *code2;
                 char *t1 = NULL;
                 if (exp2_node->child_num != 1)
@@ -169,7 +170,11 @@ char *translate_EXP(node *exp_node, char *place)
                     return ret;
                 }
                 // free(t1);
-                return "tmppppp\n";
+            }
+            else if (exp1_node->child_num == 4 && strcmp(exp1_node->children->next->c->code, "LB") == 0)
+            {
+                printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+                exit(0);
             }
             else
             {
@@ -395,6 +400,29 @@ char *translate_EXP(node *exp_node, char *place)
             // free(code1);
             return ret;
         }
+    }
+    else if (exp_node->child_num == 4 && strcmp(exp_node->children->next->c->code, "LB") == 0)
+    { // Exp -> Exp1 LB Exp2 RB
+        printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+        exit(0);
+        // Exp1 -> ID
+        node *exp1_node = exp_node->children->c;
+        if (exp1_node->child_num == 1)
+        {
+            symbol_list *sl = is_in_symbol_table(exp1_node->children->c->code + 4, 0);
+            printf("%s: ", sl->symbol_name);
+            int *width = sl->array_width;
+            int width_len = 0;
+            while (width[width_len] != -1)
+                width_len++;
+            node *exp2_node = exp_node->children->next->next->c;
+            node *tmp = exp1_node;
+            while (tmp != NULL && strcmp(tmp->parent->children->next->c->code, "LB") == 0)
+            {
+                tmp = tmp->parent;
+            }
+        }
+        return "\ntemmmmppp\n";
     }
 
     // printf("???tree=\n");
@@ -719,7 +747,39 @@ char *translate_COMPST(node *compst_node)
 {
     // printf("translate_COMPST 19\n");
     // CompSt -> LC DefList StmtList RC
-    return translate_STMTLIST(compst_node->children->next->next->c);
+    node *deflist_node = compst_node->children->next->c;
+    char *code1 = (char *)malloc(sizeof(char) * 256);
+    code1[0] = '\0';
+    code1 = translate_DEFLIST(deflist_node, code1);
+    char *code2 = translate_STMTLIST(compst_node->children->next->next->c);
+    char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
+    sprintf(ret, "%s\n%s", code1, code2);
+    // free(code1);
+    // free(code2);
+    return ret;
+}
+
+char *translate_DEFLIST(node *deflist_node, char *s)
+{
+    node *root = deflist_node;
+    if (root->typeno == Dec)
+    {
+        if (root->child_num == 3){
+            strcat(s, translate_DEC(root));
+            strcat(s,"\n");
+        }
+    }
+    if (root->children != NULL)
+    {
+        child_node *__start = root->children;
+        while (__start != NULL)
+        {
+            if (__start->c->children != NULL)
+                translate_DEFLIST(__start->c, s);
+            __start = __start->next;
+        }
+    }
+    return s;
 }
 
 char *translate_STMTLIST(node *stmtlist_node)
@@ -829,9 +889,38 @@ char *translate_VARDEC_STRUCTSPECIFIER(node *vardec_node, node *structspecifier_
     }
 }
 
+char *translate_DEC(node *dec_node)
+{ // Dec -> VarDec ASSIGNOP Exp
+    node *vardec_node = dec_node->children->c;
+    node *exp_node = dec_node->children->next->next->c;
+    if (vardec_node->child_num != 1)
+    {
+        printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+        exit(0);
+    }
+    if (exp_node->child_num == 1)
+    {
+        char *ret = (char *)malloc(sizeof(char) * 128);
+        if (strstr(exp_node->children->c->code, "ID:") != NULL)
+            sprintf(ret, "%s := %s", vardec_node->children->c->code + 4, exp_node->children->c->code + 4);
+        else
+            sprintf(ret, "%s := #%s", vardec_node->children->c->code + 4, strstr(exp_node->children->c->code, ":") + 2);
+        return ret;
+    }
+    else
+    {
+        char *t1 = new_tmp();
+        char *code1 = translate_EXP(exp_node, t1);
+        char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + 128));
+        sprintf(ret, "%s\n%s := %s", code1, vardec_node->children->c->code + 4, t1);
+        // free(t1);
+        // free(code1);
+        return ret;
+    }
+}
+
 void translate(node *root)
 {
-    // printf("in hah\n");
     switch (root->typeno)
     {
     case FunDec:

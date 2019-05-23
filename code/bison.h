@@ -58,5 +58,6 @@ typedef struct struct_typedef
     int id;
 } struct_typedef;
 
+
 #define _BISON_A_H_
 #endif

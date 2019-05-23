@@ -136,7 +136,7 @@ void yyerror(const char *s)
 char *last_one = NULL;
 void write_file(char *s)
 {
-    printf("%s\n", s);
+    //printf("%s\n", s);
     if (last_one != NULL)
     {
         if (strstr(s, "DEC") != NULL)
@@ -145,7 +145,7 @@ void write_file(char *s)
             fprintf(output_file, "%s\n", last_one);
             // printf("%s\n", s);
             // printf("%s\n", last_one);
-            printf("hah\n\n");
+            //printf("hah\n\n");
             last_one = NULL;
         }
         else
@@ -182,6 +182,7 @@ int main(int argc, char *argv[])
         yyparse();
         if (last_one != NULL)
             fprintf(output_file, "%s\n", last_one);
+        fclose(output_file);
     }
     else
     {

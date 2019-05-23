@@ -1,5 +1,6 @@
 FUNCTION add :
 PARAM temp
+
 iamt1 := *temp
 iamt3 := temp + #4
 iamt2 := *iamt3
@@ -8,6 +9,7 @@ RETURN iamt0
 
 FUNCTION main :
 DEC op 8
+
 a := #100 + #3
 b := #10
 iamt5 := &op
