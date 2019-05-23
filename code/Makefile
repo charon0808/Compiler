@@ -39,7 +39,6 @@ test: clean
 	../parser ../Test/test2.cmm ../Test/test2.ir
 	../parser ../Test/test3.cmm ../Test/test3.ir 
 	../parser ../Test/test4.cmm ../Test/test4.ir
-	../parser ../Test/test5.cmm ../Test/test5.ir
 	../parser ../Test/test_o1.cmm ../Test/test_o1.ir 
 	../parser ../Test/test_o2.cmm ../Test/test_o2.ir
 git: clean
