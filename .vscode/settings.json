@@ -3,7 +3,8 @@
         "stdio.h": "c",
         "stdlib.h": "c",
         "*.cmm": "c",
-        "*.y": "cpp"
+        "*.y": "cpp",
+        "bison.h": "c"
     },
     "files.exclude": {
         "**/.classpath": true,

@@ -18,6 +18,7 @@ extern char *cat;
 extern int yylex(void);
 extern void yyerror(const char *);
 extern char *strdup(const char *s);
+extern char *mid_code;
 
 node *node_con(char *str, int tno)
 {
@@ -134,7 +135,7 @@ void yyerror(const char *s)
 }
 
 char *last_one = NULL;
-void write_file(char *s)
+void gen_mid_code(char *s)
 {
     //printf("%s\n", s);
     if (last_one != NULL)
@@ -143,6 +144,8 @@ void write_file(char *s)
         {
             fprintf(output_file, "%s\n", s);
             fprintf(output_file, "%s\n", last_one);
+            strcat(mid_code, s);
+            strcat(mid_code, last_one);
             // printf("%s\n", s);
             // printf("%s\n", last_one);
             //printf("hah\n\n");
@@ -151,6 +154,7 @@ void write_file(char *s)
         else
         {
             fprintf(output_file, "%s\n", last_one);
+            strcat(mid_code, last_one);
             //fprintf(output_file, "%s\n", s);
             last_one = s;
             //printf("%s\n", last_one);
@@ -167,6 +171,8 @@ int main(int argc, char *argv[])
 {
     if (argc == 3)
     {
+        mid_code=(char *)malloc(sizeof(char)*102400);
+        memset(mid_code,0,sizeof(char)*102400);
         if ((input_file = freopen(argv[1], "r", stdin)) == NULL)
         {
             perror(argv[1]);
@@ -181,7 +187,10 @@ int main(int argc, char *argv[])
         }
         yyparse();
         if (last_one != NULL)
+        {
             fprintf(output_file, "%s\n", last_one);
+            strcat(mid_code, last_one);
+        }
         fclose(output_file);
     }
     else

@@ -19,11 +19,12 @@ char *translate_DEFLIST(node *, char *);
 char *translate_DEC(node *);
 void translate(node *);
 char *args_list_2_string(args_list *, char *);
+char *mid_code;
 int tmp_count = 0;
 int label_count = 0;
 
 extern char *strdup(const char *s);
-extern void write_file(char *);
+extern void gen_mid_code(char *);
 
 char *new_tmp()
 {
@@ -885,13 +886,13 @@ void translate(node *root)
     case FunDec:
     {
         char *o = translate_FUNDEC(root);
-        write_file(o);
+        gen_mid_code(o);
         break;
     }
     case CompSt:
     {
         char *oo = translate_COMPST(root);
-        write_file(oo);
+        gen_mid_code(oo);
         break;
     }
     case VarDec:
@@ -914,7 +915,7 @@ void translate(node *root)
         if (strcmp(specifier_node->children->c->code, "StructSpecifier") == 0)
         {
             char *ooo = translate_VARDEC_STRUCTSPECIFIER(root, specifier_node->children->c);
-            write_file(ooo);
+            gen_mid_code(ooo);
         }
         break;
     }
