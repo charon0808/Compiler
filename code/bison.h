@@ -27,6 +27,14 @@ struct value
     int lineno;
 };
 
+typedef struct _local_var
+{
+    char *var_name;
+    int size;
+    struct _local_var *next;
+    int offset;
+} local_var;
+
 typedef struct symbol_list
 {
     char *symbol_name;
@@ -36,6 +44,8 @@ typedef struct symbol_list
     int varlist[32];
     int dimension;
     int *array_width;
+    local_var *local_var_list;
+    int argv_list_len;
 } symbol_list;
 
 typedef struct field_list
@@ -57,7 +67,6 @@ typedef struct struct_typedef
     int total_size;
     int id;
 } struct_typedef;
-
 
 #define _BISON_A_H_
 #endif

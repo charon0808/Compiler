@@ -8,6 +8,7 @@
 #include "syntax.tab.h"
 
 // #define DEBUG
+#define LAB4
 
 #define Program 0
 #define ExtDefList 1
@@ -60,6 +61,9 @@ static const char *error_str[] = {"error_str", "Undefined variable \"%s\".", "Un
                                   "Type mismatched for operands.", "Type mismatched for return.", "Function \"%s\" is not applicable for arguments \"%s\".",
                                   "\"%s\" is not an array.", "\"%s\" is not a function.", "\"%s\" is not an integer.", "Illegal use of \".\"", "Non-existent field \"%s\".",
                                   "Redefined field \"%s\".", "Duplicated name \"%s\".", "Undefined structure \"%s\"."};
+
+static char current_func[100];
+static symbol_list *current_func_symbol_list;
 
 extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
@@ -210,6 +214,8 @@ static int add_in2_symbol_table(char *symbol_name, int which_table /* 0 for var 
     _start->type = type;
     _start->dimension = dimension;
     _start->array_width = aw;
+    _start->local_var_list = NULL;
+    _start->argv_list_len = 0;
     memset(_start->varlist, 0xff, sizeof(_start->varlist));
     return 1;
 }
@@ -486,6 +492,43 @@ static void func(node *root)
             }
         }
 
+/*** 针对实验四，不会出现结构体和高维数组定义  ***/
+#ifdef LAB4
+        if (strcmp(root->parent->code, "VarDec") != 0)
+        {
+            symbol_list *current_func_def = is_in_symbol_table(current_func + 4, 1);
+            printf("current func: %s\n", current_func + 4);
+            local_var *current_func_local_var_def = current_func_def->local_var_list;
+            local_var *tmp = current_func_local_var_def;
+            local_var *new_local_var = (local_var *)malloc(sizeof(local_var));
+            if (root->child_num == 1)
+            {
+                new_local_var->var_name = strdup(root->children->c->code + 4);
+                new_local_var->size = 4;
+            }
+            else
+            {
+                new_local_var->var_name = strdup(root->children->c->children->c->code + 4);
+                int width = atoi(root->children->next->next->c->code + 5);
+                new_local_var->size = 4 * width;
+            }
+            new_local_var->next = NULL;
+            if (current_func_local_var_def == NULL)
+            {
+                current_func_def->local_var_list = new_local_var;
+            }
+            else
+            {
+                while (tmp->next != NULL)
+                {
+                    tmp = tmp->next;
+                }
+                tmp->next = new_local_var;
+            }
+        }
+#endif
+        /*******/
+
         break;
     }
     case FunDec:
@@ -494,6 +537,7 @@ static void func(node *root)
             FunDec -> ID LP VarList RP
                     | ID LP RP
         */
+        sprintf(current_func, root->children->c->code);
         node *child_id = root->children->c;
         if (is_in_symbol_table(child_id->code + 4, 1) != NULL)
         {
@@ -501,7 +545,21 @@ static void func(node *root)
             print_error(redefined_func, child_id->lineno, child_id->code + 4, NULL);
         }
         else
+        {
             add_in2_symbol_table(child_id->code + 4, 1, child_id, find_var_type(root), -1, NULL);
+            current_func_symbol_list = is_in_symbol_table(current_func + 4, 1);
+        }
+        current_func_symbol_list->argv_list_len = 0;
+        if (root->child_num == 4)
+        {
+            node *tmp = root->children->next->next->c;
+            while (tmp->child_num == 3)
+            {
+                current_func_symbol_list->argv_list_len++;
+                tmp = tmp->children->next->next->c;
+            }
+            current_func_symbol_list->argv_list_len++;
+        }
         break;
     }
     case VarList:

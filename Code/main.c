@@ -7,6 +7,7 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
+
 extern int yylineno;
 extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
@@ -19,6 +20,8 @@ extern int yylex(void);
 extern void yyerror(const char *);
 extern char *strdup(const char *s);
 extern char *mid_code;
+
+extern void gen_target_code();
 
 node *node_con(char *str, int tno)
 {
@@ -192,6 +195,7 @@ int main(int argc, char *argv[])
             strcat(mid_code, last_one);
         }
         fclose(output_file);
+        gen_target_code();
     }
     else
     {

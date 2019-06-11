@@ -1,4 +1,7 @@
 FUNCTION main :
+PARAM aa
+PARAM bb
+PARAM cc
 
 READ n
 IF n  > #0 GOTO iamlabel0
@@ -15,5 +18,11 @@ LABEL iamlabel0 :
 
 WRITE #1
 LABEL iamlabel2 :
+RETURN #0
+
+FUNCTION hah :
+PARAM dd
+PARAM ee
+
 RETURN #0
 
