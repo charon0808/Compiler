@@ -148,7 +148,9 @@ void gen_mid_code(char *s)
             fprintf(output_file, "%s\n", s);
             fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, s);
+            strcat(mid_code,"\n");
             strcat(mid_code, last_one);
+            strcat(mid_code,"\n");
             // printf("%s\n", s);
             // printf("%s\n", last_one);
             //printf("hah\n\n");
@@ -158,6 +160,7 @@ void gen_mid_code(char *s)
         {
             fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, last_one);
+            strcat(mid_code,"\n");
             //fprintf(output_file, "%s\n", s);
             last_one = s;
             //printf("%s\n", last_one);
@@ -193,6 +196,7 @@ int main(int argc, char *argv[])
         {
             fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, last_one);
+            strcat(mid_code,"\n");
         }
         fclose(output_file);
         gen_target_code();

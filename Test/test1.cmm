@@ -1,6 +1,6 @@
 int main(int aa, int bb, int cc[200])
 {
-    int n;
+    int n=100;
     int a;
     int b;
     int c[100];
@@ -11,12 +11,5 @@ int main(int aa, int bb, int cc[200])
         write(-1);
     else
         write(0);
-    return 0;
-}
-
-int hah(int dd, int ee[2])
-{
-    int ff;
-    int gg[2];
     return 0;
 }
