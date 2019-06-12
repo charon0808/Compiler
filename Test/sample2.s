@@ -35,7 +35,7 @@
  addi $sp, $sp, -4
  sw $ra, 0($sp)
  jal fact
- lw $ra, 0($sp)
+ lw $ra, 0($sp) 
  addi $sp, $sp, 4
  move $t2, $v0
  j label8

@@ -26,10 +26,34 @@ int label_count = 0;
 extern char *strdup(const char *s);
 extern void gen_mid_code(char *);
 
+static char translate_current_func[100];
+
 char *new_tmp()
 {
     char *ret = (char *)malloc(sizeof(char) * 16);
     sprintf(ret, "iamt%d", tmp_count++);
+
+    symbol_list *current_func_def = is_in_symbol_table(translate_current_func, 1);
+     printf("new tmp current func: %s\n", translate_current_func);
+    local_var *current_func_local_var_def = current_func_def->local_var_list;
+    local_var *tmp = current_func_local_var_def;
+    local_var *new_local_var = (local_var *)malloc(sizeof(local_var));
+    new_local_var->var_name = strdup(ret);
+    new_local_var->size = 4;
+    new_local_var->next = NULL;
+    if (current_func_local_var_def == NULL)
+    {
+        current_func_def->local_var_list = new_local_var;
+    }
+    else
+    {
+        while (tmp->next != NULL)
+        {
+            tmp = tmp->next;
+        }
+        tmp->next = new_local_var;
+    }
+
     return ret;
 }
 
@@ -811,6 +835,7 @@ char *translate_FUNDEC(node *funcdec_node)
         node *varlist_node = funcdec_node->children->next->next->c;
         char *code1 = (char *)malloc(sizeof(char) * 64);
         sprintf(code1, "FUNCTION %s :", funcdec_node->children->c->code + 4);
+        sprintf(translate_current_func, "%s", funcdec_node->children->c->code + 4);
         char *code2 = translate_VARLIST(varlist_node);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 64));
         sprintf(ret, "%s\n%s", code1, code2);
@@ -822,6 +847,7 @@ char *translate_FUNDEC(node *funcdec_node)
     { // FunDec -> ID LP RP
         char *code1 = (char *)malloc(sizeof(char) * 64);
         sprintf(code1, "FUNCTION %s :", funcdec_node->children->c->code + 4);
+        sprintf(translate_current_func, "%s", funcdec_node->children->c->code + 4);
         return code1;
     }
 }

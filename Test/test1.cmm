@@ -1,9 +1,6 @@
-int main(int aa, int bb, int cc[200])
+int main()
 {
-    int n=100;
-    int a;
-    int b;
-    int c[100];
+    int n;
     n = read();
     if (n > 0)
         write(1);

@@ -497,7 +497,7 @@ static void func(node *root)
         if (strcmp(root->parent->code, "VarDec") != 0)
         {
             symbol_list *current_func_def = is_in_symbol_table(current_func + 4, 1);
-            printf("current func: %s\n", current_func + 4);
+            // printf("current func: %s\n", current_func + 4);
             local_var *current_func_local_var_def = current_func_def->local_var_list;
             local_var *tmp = current_func_local_var_def;
             local_var *new_local_var = (local_var *)malloc(sizeof(local_var));

@@ -1,7 +1,3 @@
-FUNCTION main :
-PARAM aa
-PARAM bb
-PARAM cc
 n := #100
 
 READ n

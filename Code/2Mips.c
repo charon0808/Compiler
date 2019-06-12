@@ -5,7 +5,7 @@
 #include "bison.h"
 #include "errortype.h"
 
-static const char *head_code = ".data\n_prompt: .asciiz \"Enter an integer:\"\n_ret: .asciiz \"\n\"\n.globl main\n.text\n";
+static const char *head_code = ".data\n_prompt: .asciiz \"Enter an integer:\"\n_ret: .asciiz \"\\n\"\n.globl main\n.text\n";
 static const char *read_mips = "read:\nli $v0, 4\nla $a0, _prompt\nsyscall\nli $v0, 5\nsyscall\njr $ra\n";
 static const char *write_mips = "write:\nli $v0, 1\nsyscall\nli $v0, 4\nla $a0, _ret\nsyscall\nmove $v0, $0\njr $ra\n";
 static const char *regs[] = {"$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"};
@@ -16,6 +16,8 @@ static char *mips_code;
 static char *_current_func;
 
 extern symbol_list *_func_symbol_table_start;
+
+extern void write_file(char *);
 
 static int mid_code_2_array()
 {
@@ -55,7 +57,7 @@ static char *string_trim(char *s)
     //printf("(%s)\n", s);
     while (*s == ' ')
         s++;
-    while (s[strlen(s) - 1] == ' ')
+    while (s[strlen(s) - 1] == ' ' || s[strlen(s) - 1] == ':')
         s[strlen(s) - 1] = '\0';
     return s;
 }
@@ -97,7 +99,7 @@ static int gen_var_dec_mips_code(char *func_name, char *code)
         strcat(code, "\n\n");
         func = func->next;
     }
-    printf(code);
+    //printf(code);
 }
 
 static int find_var_offset_2_fp(char *var_name)
@@ -126,15 +128,20 @@ void gen_target_code()
     int cc = mid_code_2_array();
     mips_code = (char *)malloc(sizeof(char) * 102400);
     memset(mips_code, 0, sizeof(char) * 102400);
-    print_func_var_test();
+    // printf("%s\n%s\n%smove $fp, $sp\naddi $sp, $sp, -4\nsw $ra, 0($sp)\n", head_code, read_mips, write_mips);
+    char *ttmp = (char *)malloc(sizeof(char) * 512);
+    sprintf(ttmp, "%s\n%s\n%s\n", head_code, read_mips, write_mips);
+    strcat(mips_code, ttmp);
+    //print_func_var_test();
     for (int i = 0; i < cc; i++)
     {
-        printf("%s\n", mid_code_array[i]);
         char *mm = (char *)malloc(sizeof(char) * 128);
         memset(mm, 0, sizeof(char) * 128);
-        if (mid_code_array[i][0] == '\0')
+        if (mid_code_array[i][0] == '\0' || strstr(mid_code_array[i], "PARAM") != NULL)
             continue;
+        // printf("%s\n", mid_code_array[i]);
         char *tmp;
+        int func_flag = 0;
         if ((tmp = strstr(mid_code_array[i], "FUNCTION")) != NULL)
         {
             _current_func = strdup(tmp + 9);
@@ -142,8 +149,8 @@ void gen_target_code()
             {
                 _current_func[strlen(_current_func) - 1] = '\0';
             }
-            sprintf(mm, "%s\n", _current_func);
-            gen_var_dec_mips_code(_current_func, mips_code);
+            sprintf(mm, "%s:\nmove $fp, $sp\naddi $sp, $sp, -4\nsw $ra, 0($sp)\n", _current_func);
+            func_flag = 1;
         }
         else if ((tmp = strstr(mid_code_array[i], "IF")) == NULL && (tmp = strstr(mid_code_array[i], "GOTO")) != NULL)
         {
@@ -151,7 +158,9 @@ void gen_target_code()
         }
         else if ((tmp = strstr(mid_code_array[i], "LABEL")) != NULL)
         {
-            sprintf(mm, "%s\n", tmp + 5);
+            char *la = tmp + 6;
+            la = string_trim(la);
+            sprintf(mm, "%s:\n", tmp + 6);
         }
         else if ((tmp = strstr(mid_code_array[i], ":=")) != NULL && tmp[3] == '#' && strstr(tmp + 4, "#") == NULL)
         { // x := #1
@@ -211,7 +220,7 @@ void gen_target_code()
             s1 = string_trim(s1);
             s2 = string_trim(s2);
             s3 = string_trim(s3);
-            printf("s1=_%s_, s2=_%s_, s3=_%s_\n", s1, s2, s3);
+            //printf("s1=_%s_, s2=_%s_, s3=_%s_\n", s1, s2, s3);
             if (strstr(s3, "#") == NULL)
             { // x := y - z
                 char *ttmp = (char *)malloc(sizeof(char) * 128);
@@ -351,16 +360,26 @@ void gen_target_code()
             tmp[-4] = '\0';
             char *s2 = tmp + 5;
             char *ttmp = (char *)malloc(sizeof(char) * 128);
-            sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1)); // x
-            strcat(mm, ttmp);
-            sprintf(ttmp, "jal %s\nmove %s, $v0\n", s2, regs[0]);
+            if (strstr(mid_code_array[i], ":=") != NULL)
+            {
+                sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1)); // x
+                strcat(mm, ttmp);
+                sprintf(ttmp, "jal %s\nmove %s, $v0\n", s2, regs[0]);
+            }
+            else
+            {
+                sprintf(ttmp, "jal %s\n", s2);
+            }
             strcat(mm, ttmp);
         }
         else if ((tmp = strstr(mid_code_array[i], "RETURN")) != NULL)
         {                       // RETURN x
             char *s1 = tmp + 7; // x
             char *ttmp = (char *)malloc(sizeof(char) * 128);
-            sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1)); // x
+            if (*s1 == '#')
+                sprintf(ttmp, "li %s, %s\n", regs[0], s1 + 1);
+            else
+                sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1)); // x
             strcat(mm, ttmp);
             sprintf(ttmp, "move $v0, %s\njr $ra\n", regs[0]);
             strcat(mm, ttmp);
@@ -425,7 +444,46 @@ void gen_target_code()
                 sprintf(ttmp, "lw %s, %d($fp)\n", regs[1], find_var_offset_2_fp(s2));
                 strcat(mm, ttmp);
             }
-            sprintf(ttmp, "%s %s, %s, %s\n", b_code[label], regs[0], regs[1], s3);
+            sprintf(ttmp, "%s %s, %s, %s\n", b_code[label], regs[1], regs[0], s3);
+            strcat(mm, ttmp);
+        }
+        else if ((tmp = strstr(mid_code_array[i], "WRITE")) != NULL)
+        {
+            char *ttmp = (char *)malloc(sizeof(char) * 128);
+            if (strstr(mid_code_array[i], "#") != NULL)
+            {
+                sprintf(ttmp, "li $a0, %s\n", tmp + 7);
+                strcat(mm, ttmp);
+            }
+            else
+            {
+                sprintf(ttmp, "lw $a0, %d($fp)\n", find_var_offset_2_fp(tmp + 6));
+                strcat(mm, ttmp);
+            }
+            strcat(mm, "addi $sp, $sp, -4\nsw $ra, 0($sp)\njal write\nlw $ra, 0($sp)\naddi $sp, $sp, 4");
+        }
+        else if ((tmp = strstr(mid_code_array[i], "READ")) != NULL)
+        {
+            char *ttmp = (char *)malloc(sizeof(char) * 128);
+            strcat(mm, "addi $sp, $sp, -4\nsw $ra, 0($sp)\njal read\nlw $ra, 0($sp)\naddi $sp, $sp, 4\n");
+            sprintf(ttmp, "sw $v0, %d($fp)\n", find_var_offset_2_fp(tmp + 5));
+            strcat(mm, ttmp);
+        }
+        else if ((tmp = strstr(mid_code_array[i], "ARG")) != NULL)
+        {
+            char *ttmp = (char *)malloc(sizeof(char) * 256);
+            strcat(mm, "addi $sp, $sp, -4\n");
+            if (tmp[4] == '#')
+            {
+                sprintf(ttmp, "li %s, %s\n", regs[0], tmp + 5);
+                strcat(mm, ttmp);
+            }
+            else
+            {
+                sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(tmp + 4));
+                strcat(mm, ttmp);
+            }
+            sprintf(ttmp, "sw %s, 0($sp)", regs[0]);
             strcat(mm, ttmp);
         }
         else
@@ -434,8 +492,11 @@ void gen_target_code()
             strcat(mm, mid_code_array[i]);
         }
         strcat(mm, "\n\n");
-        printf(mm);
+        //printf(mm);
         strcat(mips_code, mm);
+        if (func_flag)
+            gen_var_dec_mips_code(_current_func, mips_code);
     }
-    //printf(mips_code);
+    printf(mips_code);
+    write_file(mips_code);
 }

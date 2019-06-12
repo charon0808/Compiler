@@ -7,7 +7,6 @@
 #include "bison.h"
 #include "syntax.tab.h"
 
-
 extern int yylineno;
 extern symbol_list *_var_symbol_table_start;
 extern symbol_list *_func_symbol_table_start;
@@ -145,12 +144,12 @@ void gen_mid_code(char *s)
     {
         if (strstr(s, "DEC") != NULL)
         {
-            fprintf(output_file, "%s\n", s);
-            fprintf(output_file, "%s\n", last_one);
+            //fprintf(output_file, "%s\n", s);
+            //fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, s);
-            strcat(mid_code,"\n");
+            strcat(mid_code, "\n");
             strcat(mid_code, last_one);
-            strcat(mid_code,"\n");
+            strcat(mid_code, "\n");
             // printf("%s\n", s);
             // printf("%s\n", last_one);
             //printf("hah\n\n");
@@ -158,9 +157,9 @@ void gen_mid_code(char *s)
         }
         else
         {
-            fprintf(output_file, "%s\n", last_one);
+            //fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, last_one);
-            strcat(mid_code,"\n");
+            strcat(mid_code, "\n");
             //fprintf(output_file, "%s\n", s);
             last_one = s;
             //printf("%s\n", last_one);
@@ -173,12 +172,17 @@ void gen_mid_code(char *s)
     }
 }
 
+void write_file(char *s)
+{
+    fprintf(output_file, "%s", s);
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 3)
     {
-        mid_code=(char *)malloc(sizeof(char)*102400);
-        memset(mid_code,0,sizeof(char)*102400);
+        mid_code = (char *)malloc(sizeof(char) * 102400);
+        memset(mid_code, 0, sizeof(char) * 102400);
         if ((input_file = freopen(argv[1], "r", stdin)) == NULL)
         {
             perror(argv[1]);
@@ -194,12 +198,12 @@ int main(int argc, char *argv[])
         yyparse();
         if (last_one != NULL)
         {
-            fprintf(output_file, "%s\n", last_one);
+            //fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, last_one);
-            strcat(mid_code,"\n");
+            strcat(mid_code, "\n");
         }
-        fclose(output_file);
         gen_target_code();
+        fclose(output_file);
     }
     else
     {
