@@ -542,7 +542,7 @@ char *translate_STMT(node *stmt_node)
         char *code1 = translate_COND(exp_node, label2, label3);
         char *code2 = translate_STMT(stmt1_node);
         char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 128));
-        sprintf(ret, "LABEL %s :\n%s\nLABEL %s :\n%s\nGOTO %s\nLABEL %s :", label1, code1, label2, code2, label1, label3);
+        sprintf(ret, "LABEL %s :\n%s\nGOTO %s\nLABEL %s :\n%s\nGOTO %s\nLABEL %s :", label1, code1, label3, label2, code2, label1, label3);
         free(label1);
         free(label2);
         free(label3);
