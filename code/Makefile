@@ -44,7 +44,7 @@ test: clean
 git: clean
 	git add ..
 	git commit -m "update"
-	git push -u ssh_origin master
+	git push -u o master
 clean:
 	rm -f lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
