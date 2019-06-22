@@ -35,11 +35,12 @@ syntax-c: $(YFILE)
 .PHONY: clean test
 test: clean
 	make
-	../parser ../Test/test2.cmm ../Test/test1.s
+	../parser ../Test/test1.cmm ../Test/test1.s
 	../parser ../Test/test2.cmm ../Test/test2.s
 	../parser ../Test/test3.cmm ../Test/test3.s
 	../parser ../Test/test4.cmm ../Test/test4.s
 	../parser ../Test/test5.cmm ../Test/test5.s
+	../parser ../Test/test6.cmm ../Test/test6.s
 git: clean
 	git add ..
 	git commit -m "update"

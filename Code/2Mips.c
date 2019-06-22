@@ -23,7 +23,7 @@ static int current_func_frame_size;
 
 static int mid_code_2_array()
 {
-    printf(mid_code);
+    //printf(mid_code);
     int cc = 0;
     mid_code_array[cc++] = mid_code;
     int len = strlen(mid_code);
@@ -80,7 +80,7 @@ static int gen_var_dec_mips_code(char *func_name, char *code)
     int rest_offset = 0;
     while (lv != NULL)
     {
-        printf("%s, lv->size=%d\n", lv->var_name, lv->size);
+        //printf("%s, lv->size=%d\n", lv->var_name, lv->size);
         lv->offset = total_offset;
         if (count < func->argv_list_len)
         {
@@ -103,7 +103,7 @@ static int gen_var_dec_mips_code(char *func_name, char *code)
     strcat(code, "\n\n");
     func = func->next;
     //}
-    printf("total_offset=%d\n", total_offset);
+    //printf("total_offset=%d\n", total_offset);
     return total_offset;
     //printf(code);
 }
@@ -139,14 +139,14 @@ void gen_target_code()
     char *ttmp = (char *)malloc(sizeof(char) * 512);
     sprintf(ttmp, "%s\n%s\n%s\n", head_code, read_mips, write_mips);
     strcat(mips_code, ttmp);
-    print_func_var_test();
+    //print_func_var_test();
     for (int i = 0; i < cc; i++)
     {
         char *mm = (char *)malloc(sizeof(char) * 128);
         memset(mm, 0, sizeof(char) * 128);
         if (mid_code_array[i][0] == '\0' || strstr(mid_code_array[i], "PARAM") != NULL)
             continue;
-        printf("%s\n", mid_code_array[i]);
+        //printf("%s\n", mid_code_array[i]);
         char *tmp;
         int func_flag = 0;
         if ((tmp = strstr(mid_code_array[i], "FUNCTION")) != NULL)
@@ -188,6 +188,9 @@ void gen_target_code()
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
+            s1 = string_trim(s1);
+            s2 = string_trim(s2);
+            s3 = string_trim(s3);
             if (strstr(s3, "#") == NULL)
             { // x := y + z
                 char *ttmp = (char *)malloc(sizeof(char) * 128);
@@ -211,7 +214,7 @@ void gen_target_code()
                 else if ((tmp = strstr(s2, "#")) != NULL)
                     sprintf(ttmp, "li %s, %s\n", regs[0], tmp + 1);
                 strcat(mm, ttmp);
-                sprintf(ttmp, "addi %s, %s, %s\n", regs[0], regs[0], s3 + 2);
+                sprintf(ttmp, "addi %s, %s, %s\n", regs[0], regs[0], s3 + 1);
                 strcat(mm, ttmp);
                 sprintf(ttmp, "sw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1));
                 strcat(mm, ttmp);
@@ -258,7 +261,7 @@ void gen_target_code()
                 strcat(mm, ttmp);
             }
         }
-        else if ((tmp = strstr(mid_code_array[i], "*")) != NULL)
+        else if ((tmp = strstr(mid_code_array[i], ":= *")) == NULL && (tmp = strstr(mid_code_array[i], "*")) != NULL)
         { // x := y * z, x := y * #1
             char *tmp1 = strstr(mid_code_array[i], ":=");
             char *s1 = mid_code_array[i];
@@ -266,6 +269,9 @@ void gen_target_code()
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
+            s1 = string_trim(s1);
+            s2 = string_trim(s2);
+            s3 = string_trim(s3);
             if (strstr(s3, "#") == NULL)
             { // x := y * z
                 char *ttmp = (char *)malloc(sizeof(char) * 128);
@@ -305,17 +311,20 @@ void gen_target_code()
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
+            s1 = string_trim(s1);
+            s2 = string_trim(s2);
+            s3 = string_trim(s3);
             if (strstr(s3, "#") == NULL)
             { // x := y / z
                 char *ttmp = (char *)malloc(sizeof(char) * 128);
                 if ((tmp = strstr(s2, "#")) == NULL)
-                    sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s2)); // y
+                    sprintf(ttmp, "lw %s, %d($fp)\n", regs[1], find_var_offset_2_fp(s2)); // y
                 else if ((tmp = strstr(s2, "#")) != NULL)
-                    sprintf(ttmp, "li %s, %s\n", regs[0], tmp + 1);
+                    sprintf(ttmp, "li %s, %s\n", regs[1], tmp + 1);
                 strcat(mm, ttmp);
-                sprintf(ttmp, "lw %s, %d($fp)\n", regs[1], find_var_offset_2_fp(s3)); // z
+                sprintf(ttmp, "lw %s, %d($fp)\n", regs[2], find_var_offset_2_fp(s3)); // z
                 strcat(mm, ttmp);
-                sprintf(tmp, "div %s, %s\nmflo %s\n", regs[0], regs[1], regs[0]); // y/z
+                sprintf(tmp, "div %s, %s\nmflo %s\n", regs[1], regs[2], regs[0]); // y/z
                 strcat(mm, ttmp);
                 sprintf(ttmp, "sw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1));
                 strcat(mm, ttmp);
@@ -324,13 +333,13 @@ void gen_target_code()
             { // x := y / #1
                 char *ttmp = (char *)malloc(sizeof(char) * 128);
                 if ((tmp = strstr(s2, "#")) == NULL)
-                    sprintf(ttmp, "lw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s2)); // y
+                    sprintf(ttmp, "lw %s, %d($fp)\n", regs[1], find_var_offset_2_fp(s2)); // y
                 else if ((tmp = strstr(s2, "#")) != NULL)
-                    sprintf(ttmp, "li %s, %s\n", regs[0], tmp + 1);
+                    sprintf(ttmp, "li %s, %s\n", regs[1], tmp + 1);
                 strcat(mm, ttmp);
-                sprintf(mm, "li %s, %d\n", regs[1], s3 + 1); // #1
+                sprintf(mm, "li %s, %s\n", regs[2], s3 + 1); // #1
                 strcat(mm, ttmp);
-                sprintf(ttmp, "div %s, %s\nmflo", regs[0], regs[1], regs[0]); // y/#1
+                sprintf(ttmp, "div %s, %s\nmflo %s\n", regs[1], regs[2], regs[0]); // y/#1
                 strcat(mm, ttmp);
                 sprintf(ttmp, "sw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1));
                 strcat(mm, ttmp);
@@ -338,13 +347,13 @@ void gen_target_code()
         }
         else if ((tmp = strstr(mid_code_array[i], ":=")) != NULL && tmp[3] == '*')
         {                   // x := *y
-            char *s1 = tmp; // x
+            char *s1 = mid_code_array[i]; // x
             tmp[0] = '\0';
             char *s2 = tmp + 4;
             char *ttmp = (char *)malloc(sizeof(char) * 128);                      // y
             sprintf(ttmp, "lw %s, %d($fp)\n", regs[1], find_var_offset_2_fp(s2)); // y
             strcat(mm, ttmp);
-            sprintf(ttmp, "lw %s, 0(%s)", regs[0], regs[1]);
+            sprintf(ttmp, "lw %s, 0(%s)\n", regs[0], regs[1]);
             strcat(mm, ttmp);
             sprintf(ttmp, "sw %s, %d($fp)\n", regs[0], find_var_offset_2_fp(s1));
             strcat(mm, ttmp);
@@ -526,7 +535,7 @@ void gen_target_code()
             strcat(mm, mid_code_array[i]);
         }
         strcat(mm, "\n\n");
-        printf(mm);
+        //printf(mm);
         strcat(mips_code, mm);
         if (func_flag)
             current_func_frame_size += gen_var_dec_mips_code(_current_func, mips_code);

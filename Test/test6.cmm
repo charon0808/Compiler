@@ -1,0 +1,18 @@
+int main()
+{
+    int a;
+    int b[2];
+    int c;
+    a = read();
+    write(a);
+    a = a + 1;
+    write(a);
+    a = a * 2;
+    write(a);
+    a = a / 3;
+    write(a);
+    b[1]=a*a;
+    c=b[1];
+    write(c);
+    return 0;
+}

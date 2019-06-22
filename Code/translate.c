@@ -34,7 +34,7 @@ char *new_tmp()
     sprintf(ret, "iamt%d", tmp_count++);
 
     symbol_list *current_func_def = is_in_symbol_table(translate_current_func, 1);
-     printf("new tmp current func: %s\n", translate_current_func);
+    // printf("new tmp current func: %s\n", translate_current_func);
     local_var *current_func_local_var_def = current_func_def->local_var_list;
     local_var *tmp = current_func_local_var_def;
     local_var *new_local_var = (local_var *)malloc(sizeof(local_var));
@@ -66,6 +66,8 @@ char *new_label()
 
 char *translate_EXP(node *exp_node, char *place)
 {
+
+    //print_tree(exp_node, 1);
     if (exp_node->child_num == 1)
     {
         if (strstr(exp_node->children->c->code, "INT:") != NULL)
@@ -187,16 +189,26 @@ char *translate_EXP(node *exp_node, char *place)
                 }
                 free(t1);
             }
-            else if (exp1_node->child_num == 4 && strcmp(exp1_node->children->next->c->code, "LB") == 0)
-            {
-                printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
-                exit(0);
-            }
             else
             {
-                printf("invalid exp1 for exp1 = exp2!!!\n");
-                exit(-1);
+                char *t1 = new_tmp();
+                char *t2 = new_tmp();
+                char *code1 = translate_EXP(exp1_node, t1);
+                char *code2 = translate_EXP(exp2_node, t2);
+                char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 256));
+                sprintf(ret, "%s := %s\n", t1, t2);
+                return ret;
             }
+            //else if (exp1_node->child_num == 4 && strcmp(exp1_node->children->next->c->code, "LB") == 0)
+            //{
+            //    printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+            //    exit(0);
+            //}
+            //else
+            //{
+            //    printf("invalid exp1 for exp1 = exp2!!!\n");
+            //    exit(-1);
+            //}
         }
         else if (strcmp(exp_node->children->next->c->code, "PLUS") == 0 ||
                  strcmp(exp_node->children->next->c->code, "MINUS") == 0 ||
@@ -294,7 +306,6 @@ char *translate_EXP(node *exp_node, char *place)
             return ret;
         }
     }
-
     if (exp_node->child_num == 2 && strcmp(exp_node->children->c->code, "MINUS") == 0)
     { // MINUS EXP1
         node *exp1_node = exp_node->children->next->c;
@@ -411,26 +422,21 @@ char *translate_EXP(node *exp_node, char *place)
     }
     else if (exp_node->child_num == 4 && strcmp(exp_node->children->next->c->code, "LB") == 0)
     { // Exp -> Exp1 LB Exp2 RB
-        printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
-        exit(0);
+        if (exp_node->parent->child_num == 4 && strcmp(exp_node->parent->children->next->c->code, "LB") == 0)
+        {
+            printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+            exit(0);
+        }
         // Exp1 -> ID
         node *exp1_node = exp_node->children->c;
-        if (exp1_node->child_num == 1)
-        {
-            symbol_list *sl = is_in_symbol_table(exp1_node->children->c->code + 4, 0);
-            printf("%s: ", sl->symbol_name);
-            int *width = sl->array_width;
-            int width_len = 0;
-            while (width[width_len] != -1)
-                width_len++;
-            node *exp2_node = exp_node->children->next->next->c;
-            node *tmp = exp1_node;
-            while (tmp != NULL && strcmp(tmp->parent->children->next->c->code, "LB") == 0)
-            {
-                tmp = tmp->parent;
-            }
-        }
-        return "\ntemmmmppp\n";
+        node *exp2_node = exp_node->children->next->next->c;
+        char *t1 = new_tmp();
+        char *t2 = new_tmp();
+        char *code1 = translate_EXP(exp1_node, t1);
+        char *code2 = translate_EXP(exp2_node, t2);
+        char *ret = (char *)malloc(sizeof(char) * (strlen(code1) + strlen(code2) + 256));
+        sprintf(ret, "%s\n%s\n%s := %s * #4\n%s := %s + %s\n%s := *%s\n", code1, code2, t2, t2, t1, t1, t2, place, t1);
+        return ret;
     }
 }
 

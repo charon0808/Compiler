@@ -86,7 +86,7 @@ addi $sp, $sp, 8
 lw $ra, -4($fp)
 
 
-li $t0, 3 
+li $t0, 3
 lw $t1, -24($fp)
 add $t0, $t0, $t1
 sw $t0, -20($fp)
