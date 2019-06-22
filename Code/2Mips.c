@@ -170,7 +170,7 @@ void gen_target_code()
             la = string_trim(la);
             sprintf(mm, "%s:\n", tmp + 6);
         }
-        else if ((tmp = strstr(mid_code_array[i], ":=")) != NULL && tmp[3] == '#' && strstr(tmp + 4, "#") == NULL)
+        else if ((tmp = strstr(mid_code_array[i], ":=")) != NULL && tmp[3] == '#' && strstr(tmp + 4, "#") == NULL && strstr(tmp + 4, "+") == NULL && strstr(tmp + 4, "-") == NULL && strstr(tmp + 4, "*") == NULL && strstr(tmp + 4, "/") == NULL)
         { // x := #1
             char *s1 = mid_code_array[i];
             tmp[0] = '\0';
@@ -184,7 +184,7 @@ void gen_target_code()
         { // x := y + z, x := y + #1
             char *tmp1 = strstr(mid_code_array[i], ":=");
             char *s1 = mid_code_array[i];
-            char *s2 = tmp1 + 2;
+            char *s2 = tmp1 + 3;
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
@@ -262,7 +262,7 @@ void gen_target_code()
         { // x := y * z, x := y * #1
             char *tmp1 = strstr(mid_code_array[i], ":=");
             char *s1 = mid_code_array[i];
-            char *s2 = tmp1 + 2;
+            char *s2 = tmp1 + 3;
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
@@ -289,7 +289,7 @@ void gen_target_code()
                 else if ((tmp = strstr(s2, "#")) != NULL)
                     sprintf(ttmp, "li %s, %s\n", regs[0], tmp + 1);
                 strcat(mm, ttmp);
-                sprintf(ttmp, "li %s, %d\n", regs[1], s3 + 1); // #1
+                sprintf(ttmp, "li %s, %s\n", regs[1], s3 + 1); // #1
                 strcat(mm, ttmp);
                 sprintf(ttmp, "mul %s, %s, %s\n", regs[0], regs[0], regs[1]);
                 strcat(mm, ttmp);
@@ -301,7 +301,7 @@ void gen_target_code()
         { // x := y / z, x := y / #1
             char *tmp1 = strstr(mid_code_array[i], ":=");
             char *s1 = mid_code_array[i];
-            char *s2 = tmp1 + 2;
+            char *s2 = tmp1 + 3;
             tmp1[0] = tmp1[1] = '\0';
             char *s3 = tmp + 1;
             tmp[0] = '\0';
@@ -388,7 +388,7 @@ void gen_target_code()
                 strcat(mm, ttmp);
                 argm_size = 0;
             }
-            strcat(mm, "lw $ra, -4($sp)\n");
+            strcat(mm, "lw $ra, -4($fp)\n");
         }
         else if ((tmp = strstr(mid_code_array[i], "RETURN")) != NULL)
         {                       // RETURN x
@@ -482,12 +482,12 @@ void gen_target_code()
                 sprintf(ttmp, "lw $a0, %d($fp)\n", find_var_offset_2_fp(tmp + 6));
                 strcat(mm, ttmp);
             }
-            strcat(mm, "addi $sp, $sp, -4\nsw $ra, 0($sp)\njal write\nlw $ra, 0($sp)\naddi $sp, $sp, 4");
+            strcat(mm, "sw $ra, -4($fp)\njal write\nlw $ra, -4($fp)\n");
         }
         else if ((tmp = strstr(mid_code_array[i], "READ")) != NULL)
         {
             char *ttmp = (char *)malloc(sizeof(char) * 128);
-            strcat(mm, "addi $sp, $sp, -4\nsw $ra, 0($sp)\njal read\nlw $ra, 0($sp)\naddi $sp, $sp, 4\n");
+            strcat(mm, "sw $ra, -4($fp)\njal read\nlw $ra, -4($fp)\n");
             sprintf(ttmp, "sw $v0, %d($fp)\n", find_var_offset_2_fp(tmp + 5));
             strcat(mm, ttmp);
         }

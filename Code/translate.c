@@ -258,7 +258,7 @@ char *translate_EXP(node *exp_node, char *place)
                 if (strstr(exp1_node->children->c->code, "ID:") != NULL)
                     sprintf(ret, "%s\n%s := %s %c %s", code1, place, strstr(exp1_node->children->c->code, ":") + 2, op, t1);
                 else
-                    sprintf(ret, "%s\n%s := %s %c #%s", code1, place, strstr(exp1_node->children->c->code, ":") + 2, op, t1);
+                    sprintf(ret, "%s\n%s := #%s %c %s", code1, place, strstr(exp1_node->children->c->code, ":") + 2, op, t1);
                 free(t1);
                 free(code1);
                 return ret;

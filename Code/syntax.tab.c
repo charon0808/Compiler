@@ -1410,7 +1410,7 @@ yyreduce:
         program_node=(yyval._node);
         if (error){
             init();
-            //print_tree($$,0);
+            print_tree((yyval._node),0);
             func((yyval._node));
             translate((yyval._node));
             free_all((yyval._node));

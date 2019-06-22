@@ -3,7 +3,7 @@ int a()
     return (3 * 4) + 12;
 }
 
-int b(int c, int d, int e)
+int bb(int c, int d, int e)
 {
     int f;
     f = a() + d * e + a();
@@ -20,7 +20,7 @@ int main()
     i = read();
     j = read();
     if (j > 3)
-        g = b(h, i, j);
+        g = bb(h, i, j);
     write(g);
     return 1;
 }
