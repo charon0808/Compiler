@@ -23,7 +23,9 @@ static int current_func_frame_size;
 
 static int mid_code_2_array()
 {
+    //printf("------------\n");
     //printf(mid_code);
+    //printf("------------\n");
     int cc = 0;
     mid_code_array[cc++] = mid_code;
     int len = strlen(mid_code);
@@ -110,6 +112,7 @@ static int gen_var_dec_mips_code(char *func_name, char *code)
 
 static int find_var_offset_2_fp(char *var_name)
 {
+        //printf("in find, var_name: %s\n", var_name);
     var_name = string_trim(var_name);
     symbol_list *func = is_in_symbol_table(_current_func, 1);
     if (func == NULL)
@@ -120,6 +123,7 @@ static int find_var_offset_2_fp(char *var_name)
     local_var *lv = func->local_var_list;
     while (lv != NULL)
     {
+       // printf("in find, lv->var_name: %s\n", lv->var_name);
         if (strcmp(lv->var_name, var_name) == 0)
         {
             return -12 - lv->offset;
@@ -152,6 +156,7 @@ void gen_target_code()
         if ((tmp = strstr(mid_code_array[i], "FUNCTION")) != NULL)
         {
             _current_func = strdup(tmp + 9);
+            //printf("_current_func:%s\n",_current_func);
             while (_current_func[strlen(_current_func) - 1] == ' ' || _current_func[strlen(_current_func) - 1] == ':')
             {
                 _current_func[strlen(_current_func) - 1] = '\0';
@@ -346,7 +351,7 @@ void gen_target_code()
             }
         }
         else if ((tmp = strstr(mid_code_array[i], ":=")) != NULL && tmp[3] == '*')
-        {                   // x := *y
+        {                                 // x := *y
             char *s1 = mid_code_array[i]; // x
             tmp[0] = '\0';
             char *s2 = tmp + 4;

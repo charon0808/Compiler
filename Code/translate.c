@@ -765,6 +765,19 @@ char *translate_DEFLIST(node *deflist_node, char *s)
             strcat(s, translate_DEC(root));
             strcat(s, "\n");
         }
+        else
+        {
+            node *vardec_node = root->children->c;
+            if (vardec_node->child_num == 4)
+            { // VarDec -> VarDec1 LB INT RB, VarDec1 -> ID
+                char *ID = strdup(vardec_node->children->c->children->c->code + 4);
+                int dim = atoi(vardec_node->children->next->next->c->code + 5);
+                char *ret = (char *)malloc(sizeof(char) * 256);
+                sprintf(ret, "DEC %s %d\n", ID, dim * 4);
+                strcat(s, ret);
+                strcat(s, "\n");
+            }
+        }
     }
     if (root->children != NULL)
     {
@@ -886,7 +899,7 @@ char *translate_DEC(node *dec_node)
     node *vardec_node = dec_node->children->c;
     node *exp_node = dec_node->children->next->next->c;
     if (vardec_node->child_num != 1)
-    {
+    { // VarDec -> VarDec1 LB INT RB, VarDec1 -> ID
         printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
         exit(0);
     }

@@ -483,6 +483,21 @@ static void func(node *root)
                     printf("in VarDec, name: %s, type: %d\n", child_id->code + 4, type);
 #endif
                     add_in2_symbol_table(child_id->code + 4, 0, child_id, type, dimension, arr_width);
+                    char *ttmp;
+                    char *hah = strdup(child_id->code);
+                    if ((ttmp = strstr(hah, "[")) != NULL)
+                    {
+                        char *tttmp = strstr(hah, "]");
+                        *ttmp = '\0';
+                        *tttmp = '\0';
+                        int len = atoi(ttmp + 1);
+                        for (int i = 0; i < len; i++)
+                        {
+                            char name[32];
+                            sprintf(name, "%s[%d]", hah + 4, i);
+                            add_in2_symbol_table(name, 0, child_id, type, dimension, arr_width);
+                        }
+                    }
                 }
                 this_type = type;
             }
@@ -504,7 +519,42 @@ static void func(node *root)
             if (root->child_num == 1)
             {
                 new_local_var->var_name = strdup(root->children->c->code + 4);
+                //printf("-----\n-----\nnew_local_var_name: %s\n-----\n-----\n", new_local_var->var_name);
                 new_local_var->size = 4;
+                char *ttmp;
+                node *child_id = root->children->c;
+                if ((ttmp = strstr(child_id->code, "[")) != NULL)
+                {
+                    char *tttmp = strstr(child_id->code, "]");
+                    *ttmp = '\0';
+                    *tttmp = '\0';
+                    int len = atoi(ttmp + 1);
+                    for (int i = 0; i < len; i++)
+                    {
+                        char name[32];
+                        sprintf(name, "%s[%d]", child_id->code + 4, i);
+                        local_var *new_new_local_var = (local_var *)malloc(sizeof(local_var));
+
+                        new_new_local_var->var_name = strdup(name);
+                        new_new_local_var->size = 4;
+                        new_new_local_var->next = NULL;
+                        //printf("-----\n-----\nnew_new_local_var_name: %s\n-----\n-----\n", new_new_local_var->var_name);
+
+                        if (new_local_var->next == NULL)
+                        {
+                            new_local_var->next = new_new_local_var;
+                        }
+                        else
+                        {
+                            local_var *tmp = new_local_var;
+                            while (tmp->next != NULL)
+                            {
+                                tmp = tmp->next;
+                            }
+                            tmp->next = new_new_local_var;
+                        }
+                    }
+                }
             }
             else
             {
@@ -512,7 +562,7 @@ static void func(node *root)
                 int width = atoi(root->children->next->next->c->code + 5);
                 new_local_var->size = 4 * width;
             }
-            new_local_var->next = NULL;
+           // new_local_var->next = NULL;
             if (current_func_local_var_def == NULL)
             {
                 current_func_def->local_var_list = new_local_var;

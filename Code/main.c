@@ -142,7 +142,7 @@ void gen_mid_code(char *s)
     //printf("%s\n", s);
     if (last_one != NULL)
     {
-        if (strstr(s, "DEC") != NULL)
+        /*if (strstr(s, "DEC") != NULL)
         {
             //fprintf(output_file, "%s\n", s);
             //fprintf(output_file, "%s\n", last_one);
@@ -155,7 +155,7 @@ void gen_mid_code(char *s)
             //printf("hah\n\n");
             last_one = NULL;
         }
-        else
+        else*/
         {
             //fprintf(output_file, "%s\n", last_one);
             strcat(mid_code, last_one);

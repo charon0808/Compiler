@@ -29,7 +29,7 @@ sw $fp, 0($sp)
 addi $fp, $sp, 8
 
 
-addi $sp, $sp, -40
+addi $sp, $sp, -20
 
 
 sw $ra, -4($fp)
@@ -80,43 +80,24 @@ jal write
 lw $ra, -4($fp)
 
 
-lw $t0, -32($fp)
-sw $t0, -28($fp)
-
-
-lw $t0, -16($fp)
-sw $t0, -44($fp)
-
-
-li $t0, 1
-sw $t0, -48($fp)
-
-
-lw $t0, -48($fp)
-li $t1, 4
+lw $t0, -12($fp)
+lw $t1, -12($fp)
 mul $t0, $t0, $t1
-sw $t0, -48($fp)
-
-
-lw $t0, -44($fp)
-lw $t1, -48($fp)
-add $t0, $t0, $t1
-sw $t0, -44($fp)
-
-
-lw $t1, -44($fp)
-lw $t0, 0($t1)
 sw $t0, -24($fp)
 
 
-lw $a0, -24($fp)
+lw $t0, -24($fp)
+sw $t0, -28($fp)
+
+
+lw $a0, -28($fp)
 sw $ra, -4($fp)
 jal write
 lw $ra, -4($fp)
 
 
 li $t0, 0
-add $sp, 48
+add $sp, 28
 lw $ra, -4($sp)
 lw $fp, -8($sp)
 move $v0, $t0

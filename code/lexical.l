@@ -65,7 +65,7 @@ intx             0[xX]{digit4}+
 int10            ({digit2}({digit1})*{power}?)|0
 int              {int10}|{int8}|{intx}
 float            {digit1}*\.{digit1}+({power})?
-id               {letter}({letter}|{digit1})*
+id               {letter}({letter}|{digit1})*(\[{int10}\])*
 semi             ;
 comma            ,
 assignop         =
